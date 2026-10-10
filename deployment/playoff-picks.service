@@ -1,0 +1,44 @@
+[Unit]
+Description=The Playoff Pick website and local administration
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=playoff-pick
+Group=playoff-pick
+WorkingDirectory=/opt/playoff-picks
+EnvironmentFile=/etc/playoff-picks.env
+# Set this to the real, system-wide Node 24 path if it differs on your Linux host.
+ExecStartPre=/usr/bin/node /opt/playoff-picks/deployment/check.mjs --production
+ExecStart=/usr/bin/node /opt/playoff-picks/server.mjs
+Restart=on-failure
+RestartSec=5s
+KillSignal=SIGTERM
+TimeoutStopSec=30s
+UMask=0077
+MemoryMax=512M
+TasksMax=64
+LimitNOFILE=1024
+StateDirectory=playoff-picks
+StateDirectoryMode=0700
+ReadWritePaths=/var/lib/playoff-picks
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+NoNewPrivileges=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

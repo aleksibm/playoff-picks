@@ -1,0 +1,15 @@
+{
+  "name": "playoff-pick",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Account-backed NHL playoff predictions and standings leaderboard",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "check": "node deployment/check.mjs"
+  }
+}

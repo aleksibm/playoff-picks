@@ -1,0 +1,13 @@
+# Locally managed Cloudflare Tunnel for picks.aleksi.net.
+# Replace TUNNEL_UUID in both places with the UUID created on the Linux laptop.
+# Keep real credentials outside the source package and Git.
+tunnel: TUNNEL_UUID
+credentials-file: /etc/cloudflared/TUNNEL_UUID.json
+
+ingress:
+  - hostname: picks.aleksi.net
+    service: http://127.0.0.1:8765
+    originRequest:
+      httpHostHeader: picks.aleksi.net
+  # Unmatched hostnames receive a 404. Never add a route to admin port 8766.
+  - service: http_status:404

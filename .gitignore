@@ -1,0 +1,7 @@
+.local-data/
+.local-backups/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+node_modules/
+.env
