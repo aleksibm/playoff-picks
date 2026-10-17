@@ -52,7 +52,7 @@ No email/password-recovery service is configured. Submitted usernames, selected 
 
 With the app running, open **http://127.0.0.1:8766/** directly on the computer running the server. The launcher starts this dashboard alongside the player site.
 
-The dashboard shows account counts, saved drafts, locked submissions, selected teams and scores, and the NHL feed status. You can search accounts, inspect a prediction, reload the overview, or fetch the latest NHL standings. It does not change predictions, remove accounts, or reveal password hashes or sign-in tokens.
+The dashboard shows account counts, saved drafts, locked submissions, selected teams and scores, and the NHL feed status. You can search accounts, inspect a prediction, reload the overview, or fetch the latest NHL standings. Select a player to change their displayed/login name, set a new password, or reset their selections. Password resets revoke all of that player's sessions. Resetting selections clears their draft or locked prediction, removes them from the leaderboard, and lets them choose again; a confirmation dialog describes this before applying it. Old prediction revisions cannot overwrite a reset. Account deletion is not offered, and password hashes and sign-in tokens are never displayed.
 
 Administration has a separate listener bound exclusively to **127.0.0.1**. Admin pages and APIs are not served on the player site's port. Requests with foreign addresses, origins, fetch metadata, or proxy headers are rejected; manual refresh also requires a page-specific CSRF token. Anyone using the hosting computer can open the dashboard without a separate admin login.
 

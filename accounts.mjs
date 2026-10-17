@@ -152,6 +152,10 @@ export function createAccountStore(dbPath) {
   const query = {
     userByName: db.prepare('SELECT * FROM users WHERE username = ?'),
     userById: db.prepare('SELECT id, username, display_name FROM users WHERE id = ?'),
+    userCredentials: db.prepare('SELECT password_hash FROM users WHERE id = ?'),
+    renameUser: db.prepare('UPDATE users SET username = ?, display_name = ? WHERE id = ?'),
+    resetPassword: db.prepare('UPDATE users SET password_salt = ?, password_hash = ?, password_scheme = ? WHERE id = ?'),
+    revokeUserSessions: db.prepare('DELETE FROM sessions WHERE user_id = ?'),
     addUser: db.prepare('INSERT INTO users (username, display_name, password_salt, password_hash, password_scheme, created_at) VALUES (?, ?, ?, ?, ?, ?)'),
     upgradePassword: db.prepare('UPDATE users SET password_salt = ?, password_hash = ?, password_scheme = ? WHERE id = ? AND password_hash = ?'),
     addSession: db.prepare('INSERT INTO sessions (token_hash, user_id, csrf_token, expires_at, created_at) VALUES (?, ?, ?, ?, ?)'),
@@ -214,6 +218,13 @@ export function createAccountStore(dbPath) {
     return { user: publicUser(user), token, csrfToken };
   }
 
+  function requireAdminUser(userId, expectedUsername) {
+    const user = requireUser(userId);
+    if (typeof expectedUsername !== 'string') throw failure(400, 'Reload the account before making changes.');
+    if (user.username !== expectedUsername) throw failure(409, 'This account changed. Reload it before making changes.');
+    return user;
+  }
+
   function readPrediction(userId) {
     const row = query.prediction.get(userId, SEASON);
     return row ? {
@@ -271,13 +282,20 @@ export function createAccountStore(dbPath) {
         const actual = await deriveKey(validPassword ? password : '', salt, 64, legacy ? LEGACY_SCRYPT_OPTIONS : SCRYPT_OPTIONS);
         const matches = expected.length === actual.length && timingSafeEqual(actual, expected);
         if (!user || !validPassword || !matches) throw failure(401, 'Incorrect username or password.');
+        let upgradedPassword = null;
         if (legacy) {
           const newSalt = randomBytes(32);
           const hash = await deriveKey(password, newSalt, 64, SCRYPT_OPTIONS);
-          // Avoid overwriting a password changed through a concurrent connection.
-          query.upgradePassword.run(newSalt.toString('hex'), hash.toString('hex'), PASSWORD_SCHEME, user.id, user.password_hash);
+          upgradedPassword = {salt:newSalt.toString('hex'), hash:hash.toString('hex')};
         }
-        return transaction(() => newSession(user));
+        return transaction(() => {
+          // An admin reset must also stop a login that was hashing the old password.
+          if (query.userCredentials.get(user.id)?.password_hash !== user.password_hash) {
+            throw failure(401, 'Incorrect username or password.');
+          }
+          if (upgradedPassword) query.upgradePassword.run(upgradedPassword.salt, upgradedPassword.hash, PASSWORD_SCHEME, user.id, user.password_hash);
+          return newSession(requireUser(user.id));
+        });
       });
     },
 
@@ -309,6 +327,44 @@ export function createAccountStore(dbPath) {
 
     submitPrediction(userId, teamIds, expectedRevision) {
       return writePrediction(userId, teamIds, 'submitted', expectedRevision);
+    },
+
+    adminRenameUser(userId, username, expectedUsername) {
+      const canonicalName = validateUsername(username);
+      return transaction(() => {
+        requireAdminUser(userId, expectedUsername);
+        const existing = query.userByName.get(canonicalName);
+        if (existing && existing.id !== userId) throw failure(409, 'That username is already taken.');
+        query.renameUser.run(canonicalName, username, userId);
+        return publicUser(requireUser(userId));
+      });
+    },
+
+    async adminResetPassword(userId, password, expectedUsername) {
+      validatePassword(password);
+      requireAdminUser(userId, expectedUsername);
+      return authenticate(async () => {
+        const salt = randomBytes(32);
+        const hash = await deriveKey(password, salt, 64, SCRYPT_OPTIONS);
+        return transaction(() => {
+          const user = requireAdminUser(userId, expectedUsername);
+          query.resetPassword.run(salt.toString('hex'), hash.toString('hex'), PASSWORD_SCHEME, userId);
+          query.revokeUserSessions.run(userId);
+          return publicUser(user);
+        });
+      });
+    },
+
+    adminResetPrediction(userId, expectedRevision, expectedUsername) {
+      if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) throw failure(400, 'Reload the prediction before resetting it.');
+      return transaction(() => {
+        requireAdminUser(userId, expectedUsername);
+        const current = readPrediction(userId);
+        if ((current?.revision ?? 0) !== expectedRevision) throw failure(409, 'This prediction changed. Reload it before resetting.');
+        if (!current) return null;
+        query.savePrediction.run(userId, SEASON, '[]', 'draft', null, new Date().toISOString(), current.revision + 1);
+        return readPrediction(userId);
+      });
     },
 
     listSubmitted() {

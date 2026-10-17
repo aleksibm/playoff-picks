@@ -33,7 +33,7 @@
         <div class="hero-note">
           <span class="host-symbol" aria-hidden="true">⌂</span>
           <strong>A view from the booth.</strong>
-          <p>This dashboard is available only on the computer hosting the site. Submitted predictions stay locked.</p>
+          <p>This dashboard is available only on the computer hosting the site. Select a player to inspect their picks or manage their account.</p>
           <button id="reload-overview" class="button button-light" type="button">Reload dashboard <span aria-hidden="true">↻</span></button>
         </div>
       </section>
@@ -84,6 +84,11 @@
               <div class="inspector-summary"><div><h3 id="inspector-name"></h3><p id="inspector-meta"></p></div><div class="inspector-score"><strong id="inspector-points">—</strong><span id="inspector-score-label">NHL points</span></div></div>
               <div id="inspector-teams" class="inspector-teams"></div>
               <p id="inspector-note" class="muted-text"></p>
+              <div class="account-management">
+                <p class="kicker">MANAGE THIS ACCOUNT</p>
+                <div class="account-actions"><button id="rename-account" type="button" class="button button-secondary">Change name</button><button id="change-password" type="button" class="button button-secondary">Reset password</button><button id="reset-selections" type="button" class="button button-outline-danger">Reset selections</button></div>
+                <p id="account-action-status" class="action-status" role="status" aria-live="polite"></p>
+              </div>
             </div>
           </section>
         </div>
@@ -92,5 +97,17 @@
     <footer><span>THE PLAYOFF PICK <span class="footer-dot">·</span> HOST DASHBOARD</span><span id="server-started">Local server</span></footer>
     <noscript><p class="error-banner">Enable JavaScript to load the account dashboard.</p></noscript>
   </div>
+  <dialog id="account-dialog" class="account-dialog" aria-labelledby="account-dialog-title" aria-describedby="account-dialog-description">
+    <button type="button" id="close-account-dialog" class="dialog-close" aria-label="Close account action">×</button>
+    <p class="kicker">ACCOUNT MANAGEMENT</p><h2 id="account-dialog-title"></h2>
+    <p id="account-dialog-target" class="dialog-target"></p>
+    <p id="account-dialog-description" class="muted-text"></p>
+    <form id="account-action-form">
+      <div id="rename-fields" class="management-fields" hidden><label for="new-account-name">New username</label><input id="new-account-name" name="username" type="text" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="new-name-hint"><p id="new-name-hint" class="field-hint">3–24 letters, numbers, or underscores. This also becomes the player's login username.</p></div>
+      <div id="password-fields" class="management-fields" hidden><label for="new-account-password">New password</label><input id="new-account-password" name="password" type="password" autocomplete="new-password" minlength="7" maxlength="256" aria-describedby="new-password-hint"><p id="new-password-hint" class="field-hint">7–128 characters. The current password cannot be viewed.</p><label for="confirm-account-password">Confirm new password</label><input id="confirm-account-password" name="password-confirm" type="password" autocomplete="new-password" minlength="7" maxlength="256"></div>
+      <p id="account-dialog-error" class="action-status error" role="alert"></p>
+      <div class="dialog-actions"><button type="button" id="cancel-account-action" class="button button-secondary">Cancel</button><button id="confirm-account-action" type="submit" class="button button-primary">Save changes</button></div>
+    </form>
+  </dialog>
 </body>
 </html>

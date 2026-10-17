@@ -5,6 +5,14 @@ const el = id => document.getElementById(id);
 let overview = null;
 let selectedAccountId = null;
 let busy = false;
+let accountAction = null;
+
+function renderAccountActions() {
+  const account = overview?.accounts.find(item => item.id === selectedAccountId);
+  el('rename-account').disabled = busy || !account;
+  el('change-password').disabled = busy || !account;
+  el('reset-selections').disabled = busy || !account?.prediction?.teamIds.length;
+}
 
 function node(tag, className, text) {
   const element = document.createElement(tag);
@@ -47,6 +55,7 @@ function renderAccounts() {
     button.append(avatar, node('span', 'account-name', accountName(account)));
     button.addEventListener('click', () => {
       selectedAccountId = account.id;
+      el('account-action-status').textContent = '';
       renderAccounts();
       renderInspector();
       if (window.matchMedia('(max-width: 850px)').matches) {
@@ -68,6 +77,7 @@ function renderAccounts() {
 }
 
 function renderInspector() {
+  renderAccountActions();
   const account = overview?.accounts.find(item => String(item.id) === String(selectedAccountId));
   el('inspector-empty').hidden = Boolean(account);
   el('inspector-content').hidden = !account;
@@ -148,6 +158,7 @@ function render() {
 async function load(refresh = false) {
   if (busy) return;
   busy = true;
+  renderAccountActions();
   el('dashboard').setAttribute('aria-busy', 'true');
   el('reload-overview').disabled = true;
   el('refresh-standings').disabled = true;
@@ -183,8 +194,102 @@ async function load(refresh = false) {
     el('dashboard').setAttribute('aria-busy', 'false');
     el('reload-overview').disabled = false;
     el('refresh-standings').disabled = !overview?.server.canRefresh || !overview?.csrfToken;
+    renderAccountActions();
   }
 }
+
+function openAccountAction(action) {
+  const account = overview?.accounts.find(item => item.id === selectedAccountId);
+  if (busy || !account) return;
+  accountAction = {action, id:account.id, username:account.username, revision:account.prediction?.revision ?? 0};
+  el('account-action-form').reset();
+  el('account-dialog-error').textContent = '';
+  el('account-dialog-target').textContent = `Selected player: ${accountName(account)}`;
+  el('rename-fields').hidden = action !== 'rename';
+  el('password-fields').hidden = action !== 'password';
+  el('new-account-name').required = action === 'rename';
+  el('new-account-password').required = action === 'password';
+  el('confirm-account-password').required = action === 'password';
+  el('new-account-name').value = account.displayName;
+  const settings = {
+    rename:['Change account name', 'This updates the displayed name and the username used to log in. Their password and selections stay saved.', 'Save name'],
+    password:['Reset account password', 'Set a new password for this player. All their existing sign-in sessions will be ended.', 'Set password'],
+    'reset-prediction':['Reset selections?', 'This permanently clears all selected teams, unlocks the prediction, and removes this player from the leaderboard. They can then choose and submit a new prediction.', 'Reset selections'],
+  }[action];
+  el('account-dialog-title').textContent = settings[0];
+  el('account-dialog-description').textContent = settings[1];
+  el('confirm-account-action').textContent = settings[2];
+  el('confirm-account-action').classList.toggle('button-danger', action === 'reset-prediction');
+  el('account-dialog').showModal();
+  (action === 'rename' ? el('new-account-name') : action === 'password' ? el('new-account-password') : el('cancel-account-action')).focus();
+}
+
+el('rename-account').addEventListener('click', () => openAccountAction('rename'));
+el('change-password').addEventListener('click', () => openAccountAction('password'));
+el('reset-selections').addEventListener('click', () => openAccountAction('reset-prediction'));
+for (const id of ['close-account-dialog', 'cancel-account-action']) el(id).addEventListener('click', () => {
+  if (!busy) el('account-dialog').close();
+});
+el('account-dialog').addEventListener('cancel', event => { if (busy) event.preventDefault(); });
+el('account-dialog').addEventListener('close', () => {
+  accountAction = null;
+  el('new-account-password').value = '';
+  el('confirm-account-password').value = '';
+  el('account-dialog-error').textContent = '';
+});
+el('account-action-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (busy || !accountAction || !el('account-dialog').open) return;
+  const selected = {...accountAction};
+  const body = {expectedUsername:selected.username};
+  if (selected.action === 'rename') body.username = el('new-account-name').value;
+  if (selected.action === 'reset-prediction') body.revision = selected.revision;
+  if (selected.action === 'password') {
+    const password = el('new-account-password').value;
+    if (Array.from(password).length < 7 || Array.from(password).length > 128) {
+      el('account-dialog-error').textContent = 'Use a password with 7–128 characters.'; return;
+    }
+    if (password !== el('confirm-account-password').value) {
+      el('account-dialog-error').textContent = 'The passwords do not match.'; return;
+    }
+    body.password = password;
+    el('new-account-password').value = '';
+    el('confirm-account-password').value = '';
+  }
+  busy = true;
+  renderAccountActions();
+  el('confirm-account-action').disabled = true;
+  el('cancel-account-action').disabled = true;
+  el('close-account-dialog').disabled = true;
+  el('reload-overview').disabled = true;
+  el('refresh-standings').disabled = true;
+  el('account-dialog-error').textContent = '';
+  try {
+    const response = await fetch(`/api/admin/accounts/${selected.id}/${selected.action}`, {
+      method:'POST', headers:{'Content-Type':'application/json','X-CSRF-Token':overview.csrfToken},
+      body:JSON.stringify(body), cache:'no-store',
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'The account could not be updated.');
+    overview = data;
+    render();
+    el('account-dialog').close();
+    el('account-action-status').textContent = selected.action === 'rename' ? 'Account name updated.'
+      : selected.action === 'password' ? 'Password updated. The player must log in again.'
+        : 'Selections reset. The player can make a new prediction.';
+  } catch (error) {
+    el('account-dialog-error').textContent = error instanceof TypeError ? 'Cannot reach the local server. Reload the dashboard to check whether the change completed.' : error.message;
+  } finally {
+    delete body.password;
+    busy = false;
+    el('confirm-account-action').disabled = false;
+    el('cancel-account-action').disabled = false;
+    el('close-account-dialog').disabled = false;
+    el('reload-overview').disabled = false;
+    el('refresh-standings').disabled = !overview?.server.canRefresh || !overview?.csrfToken;
+    renderAccountActions();
+  }
+});
 
 el('account-search').addEventListener('input', renderAccounts);
 el('reload-overview').addEventListener('click', () => load());

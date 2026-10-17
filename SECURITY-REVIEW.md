@@ -6,6 +6,8 @@ Updated 17 October 2026: the password minimum is now 7 characters for registrati
 
 Updated 18 October 2026: leaderboard requests return no entries until the authenticated viewer has submitted their own prediction. Complete unsubmitted drafts do not unlock access. Shared prediction links follow the same restriction in the UI, and account changes discard previously displayed leaderboard entries.
 
+Updated 18 October 2026: the host-only dashboard can rename accounts, reset passwords, and clear selections, including locked predictions. Account writes require the exact local Origin, admin CSRF token, a bounded JSON body, and the reviewed account identity. Selection resets require the reviewed revision and create a new empty draft revision. Password resets use the existing bounded scrypt work, revoke all target sessions, and prevent in-flight old-password logins from creating a session afterward. These routes are absent from the public listener.
+
 **Result: the application is prepared for installation and final hosting verification. All 134 automated regression tests passed. Desktop and mobile browser checks passed. It has not yet been deployed to the other laptop or tested through your real Cloudflare tunnel.**
 
 This was a source review, targeted security regression testing, and local browser verification. It is not a guarantee against every vulnerability or an independent penetration-test certification. Follow [HOSTING.md](HOSTING.md) before inviting players.

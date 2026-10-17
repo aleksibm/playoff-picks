@@ -57,8 +57,37 @@ function json(response, status, body) {
   response.end(JSON.stringify(body));
 }
 
+function readAdminJSON(request) {
+  if (!/^application\/json(?:\s*;.*)?$/i.test(request.headers['content-type'] ?? '')) {
+    throw failure(415, 'Send this request as JSON.');
+  }
+  return new Promise((resolveBody, rejectBody) => {
+    let size = 0;
+    let rejected = false;
+    const chunks = [];
+    request.on('data', chunk => {
+      size += chunk.length;
+      if (size > 4096) {
+        if (!rejected) rejectBody(failure(413, 'This request is too large.'));
+        rejected = true;
+        chunks.length = 0;
+      } else if (!rejected) chunks.push(chunk);
+    });
+    request.on('end', () => {
+      if (rejected) return;
+      try {
+        const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+        if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error();
+        resolveBody(body);
+      } catch { rejectBody(failure(400, 'Send a JSON object with the account action.')); }
+    });
+    request.on('error', () => rejectBody(failure(400, 'This request could not be read.')));
+    request.on('aborted', () => rejectBody(failure(400, 'This request was interrupted.')));
+  });
+}
+
 /** A separate listener that can only bind to this computer's IPv4 loopback. */
-export function createLocalAdmin({ overview, refreshStandings, canRefresh }) {
+export function createLocalAdmin({ overview, refreshStandings, canRefresh, manageAccount }) {
   const csrfToken = randomBytes(32).toString('base64url');
   const responseBody = () => ({ ...overview(), csrfToken });
   let closed = false;
@@ -82,6 +111,27 @@ export function createLocalAdmin({ overview, refreshStandings, canRefresh }) {
           response.setHeader('Allow', 'GET');
           throw failure(405, 'This request method is not supported.');
         }
+        return json(response, 200, responseBody());
+      }
+      const accountAction = /^\/api\/admin\/accounts\/([1-9]\d*)\/(rename|password|reset-prediction)$/.exec(path);
+      if (accountAction && manageAccount) {
+        if (request.method !== 'POST') {
+          response.setHeader('Allow', 'POST');
+          throw failure(405, 'This request method is not supported.');
+        }
+        if (request.headers.origin !== origin || !equalTokens(request.headers['x-csrf-token'], csrfToken)) {
+          throw failure(403, 'Reload the local administration page before changing an account.');
+        }
+        const userId = Number(accountAction[1]);
+        if (!Number.isSafeInteger(userId)) throw failure(404, 'Account not found.');
+        const body = await readAdminJSON(request);
+        const field = {rename:'username', password:'password', 'reset-prediction':'revision'}[accountAction[2]];
+        if (Object.keys(body).some(key => key !== field && key !== 'expectedUsername')
+            || !Object.hasOwn(body, field) || !Object.hasOwn(body, 'expectedUsername')) {
+          throw failure(400, 'Send the selected account action only.');
+        }
+        await manageAccount(userId, accountAction[2], body);
+        if (closed) throw failure(503, 'The local app is shutting down.');
         return json(response, 200, responseBody());
       }
       if (path === '/api/admin/standings/refresh') {
@@ -138,7 +188,8 @@ export function createLocalAdmin({ overview, refreshStandings, canRefresh }) {
     } catch (error) {
       request.resume();
       if (response.writableEnded || response.destroyed) return;
-      const status = Number.isInteger(error.status) && error.status >= 400 && error.status < 500 ? error.status : 500;
+      const status = Number.isInteger(error.status) && error.status >= 400 && error.status < 500 ? error.status : error.status === 503 ? 503 : 500;
+      if (status === 503) response.setHeader('Retry-After', '2');
       json(response, status, { error: status === 500 ? 'The local administration page could not load. Try again.' : error.message });
     }
   });

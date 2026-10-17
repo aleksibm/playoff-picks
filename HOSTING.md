@@ -148,6 +148,8 @@ Use `sudo journalctl -u playoff-picks -u cloudflared --since today` to diagnose 
 
 On the hosting laptop, open **http://127.0.0.1:8766/**. People using the hosting computer can access this dashboard without a separate admin password, so lock the laptop when unattended. It is excluded from the tunnel.
 
+Select an account in the table to open its inspector and management controls. **Change name** updates both the displayed name and login username. **Reset password** sets a new 7–128-character password and signs that player out everywhere. **Reset selections** clears their picks, unlocks any submitted prediction, and removes their leaderboard entry until they submit again. Each action identifies the selected player in a confirmation dialog. Account changes require the local page's Origin and CSRF token; these endpoints do not exist on the public player port. The dashboard does not display existing passwords or offer account deletion.
+
 The backend gets verified NHL standings daily at **12:00 Europe/Helsinki**, including daylight saving changes. It fetches initial data and catches up after a missed update; no separate cron job is needed. The admin page shows the next update and any stale or unavailable data. Feed outages retain the last verified scores. The game currently uses the **2026–27 regular season**; future seasons require a verified code/configuration update.
 
 The source ZIP excludes accounts and sessions. To preserve existing local accounts, stop the app on this Mac and privately transfer the complete `.local-data` directory, including SQLite WAL/SHM files if present. Stop the Linux service before putting those files in `/var/lib/playoff-picks`. Back up any existing hosting data first. Never combine account databases.

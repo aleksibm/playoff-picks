@@ -328,6 +328,12 @@ export function createApp(options = {}) {
   const admin = createLocalAdmin({
     canRefresh,
     refreshStandings,
+    async manageAccount(userId, action, body) {
+      if (action === 'rename') return store.adminRenameUser(userId, body.username, body.expectedUsername);
+      if (action === 'password') return store.adminResetPassword(userId, body.password, body.expectedUsername);
+      if (action === 'reset-prediction') return store.adminResetPrediction(userId, body.revision, body.expectedUsername);
+      throw failure(404, 'This account action was not found.');
+    },
     overview() {
       const accounts = store.listAccounts().map(account => ({ ...account, points: predictionScore(account.prediction) }));
       const submitted = store.listSubmitted();
