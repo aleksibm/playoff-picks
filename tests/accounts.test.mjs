@@ -45,10 +45,11 @@ test('invalid usernames and passwords are rejected before account creation', asy
   for (const username of [undefined, null, 42, '', 'ab', 'a'.repeat(25), 'abc def', 'abc-def', 'åäö', ' abc', 'abc ']) {
     await assert.rejects(store.register(username, PASSWORD), { status: 400 });
   }
-  for (const password of [undefined, null, 42, '', 'short', 'a'.repeat(14), 'a'.repeat(129), 'a'.repeat(100000)]) {
+  for (const password of [undefined, null, 42, '', 'short', 'a'.repeat(6), 'a'.repeat(129), 'a'.repeat(100000)]) {
     await assert.rejects(store.register('ValidFan', password), { status: 400 });
   }
-  const registration = await store.register('ValidFan', 'a'.repeat(15));
+  const registration = await store.register('ValidFan', 'a'.repeat(7));
+  assert.equal((await store.login('ValidFan', 'a'.repeat(7))).user.id, registration.user.id);
   assert.equal(registration.user.id, 1);
   assert.equal(store.getPrediction(1), null);
 });

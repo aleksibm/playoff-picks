@@ -2,6 +2,8 @@
 
 Reviewed 10 October 2026 for a small community NHL prediction game hosted on a dedicated Linux laptop, using **picks.aleksi.net through Cloudflare Tunnel**.
 
+Updated 17 October 2026: the password minimum is now 7 characters for registration and login, at the user's request. The 128-character maximum and password hashing settings are unchanged. The review below records the original 15-character minimum.
+
 **Result: the application is prepared for installation and final hosting verification. All 134 automated regression tests passed. Desktop and mobile browser checks passed. It has not yet been deployed to the other laptop or tested through your real Cloudflare tunnel.**
 
 This was a source review, targeted security regression testing, and local browser verification. It is not a guarantee against every vulnerability or an independent penetration-test certification. Follow [HOSTING.md](HOSTING.md) before inviting players.

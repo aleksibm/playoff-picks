@@ -81,6 +81,18 @@ test('register creates a persistent real session with private cookies and no cre
   assert.equal(statSync(context.directory).mode & 0o777, 0o700);
 });
 
+test('seven-character passwords work through registration, logout, and login', async t => {
+  const context = await setup(t);
+  const fan = client(context.url);
+  assert.equal((await fan.request('/api/register', 'POST', {username:'ShortFan', password:'sixsix'})).status, 400);
+  const registered = await fan.request('/api/register', 'POST', {username:'SevenFan', password:'seven77'});
+  assert.equal(registered.status, 200);
+  assert.equal((await fan.request('/api/logout', 'POST', {})).status, 200);
+  const loggedIn = await fan.login('SevenFan', 'seven77');
+  assert.equal(loggedIn.status, 200);
+  assert.equal(loggedIn.data.user.id, registered.data.user.id);
+});
+
 test('login is case insensitive, rejects wrong passwords, and rotates prior sessions', async t => {
   const { url } = await setup(t);
   const fan = client(url);

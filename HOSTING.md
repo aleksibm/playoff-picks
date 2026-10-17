@@ -172,6 +172,49 @@ The script stops the app, archives its whole private data directory under `/var/
 
 Keep encrypted backups on a separate device. They contain password hashes and sessions. From the archive directory, check `sha256sum -c backup-file.tar.gz.sha256` and test restoration into an empty folder. To restore live data, stop the service, preserve existing data separately, and extract a trusted verified archive into an empty `/var/lib/playoff-picks`. Set the permissions above before restarting. Never extract an untrusted archive as root. Securely back up Cloudflare tunnel credentials separately; the app's backup does not include them.
 
+## Update an existing installation from GitHub
+
+For the systemd installation above, run the following on the hosting laptop. Git
+and Node.js 24 must already be installed, and your normal user must have read
+access to the GitHub repository. The commands download the current `main` branch
+into a fresh temporary folder and test it before stopping the installed service.
+They preserve `/var/lib/playoff-picks`, `/etc/playoff-picks.env`, and the live
+Cloudflare configuration. No Git checkout is needed inside `/opt/playoff-picks`.
+
+```sh
+(
+set -eu
+task_update_dir=$(mktemp -d)
+git clone --branch main --single-branch https://github.com/aleksibm/playoff-picks.git "$task_update_dir"
+cd "$task_update_dir"
+node --test tests/*.test.mjs
+
+sudo sh /opt/playoff-picks/deployment/backup.sh
+task_code_backup="/opt/playoff-picks-backup-$(date +%Y%m%d-%H%M%S)"
+sudo cp -a /opt/playoff-picks "$task_code_backup"
+
+sudo systemctl stop playoff-picks
+sudo cp -R dist deployment tests /opt/playoff-picks/
+sudo cp ./*.mjs package.json README.md HOSTING.md SECURITY-REVIEW.md /opt/playoff-picks/
+sudo chown -R root:root /opt/playoff-picks
+sudo find /opt/playoff-picks -type d -exec chmod 0755 {} +
+sudo find /opt/playoff-picks -type f -exec chmod 0644 {} +
+sudo systemctl start playoff-picks
+sudo systemctl status playoff-picks --no-pager
+printf 'Previous application files: %s\n' "$task_code_backup"
+)
+```
+
+The backup script briefly stops and restarts the service while backing up private
+data; the file update causes another brief interruption. If a command fails, the
+subshell stops. Check `sudo journalctl -u playoff-picks -n 50 --no-pager` before
+continuing. The data backup is in `/var/backups/playoff-picks`; the previous app
+files remain in the timestamped folder under `/opt`.
+
+After a successful update, check `https://picks.aleksi.net/api/health` and reload
+the player site with Ctrl+Shift+R. These same commands also work for later
+updates, without replacing the laptop's configuration or private data.
+
 ## Operating limits
 
 Use this as a small community game on a dedicated host. Do not give untrusted people local accounts or run unrelated services on this laptop; the backend trusts its local tunnel process. App rate limits reset on restart and can temporarily affect people sharing one network address. Cloudflare provides edge protection, while large-scale abuse still needs monitoring and appropriate rules.

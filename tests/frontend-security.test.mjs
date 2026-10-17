@@ -66,6 +66,36 @@ async function browser({guest = ['BUF'], session = anonymous, route} = {}) {
   };
 }
 
+test('guests start registration from Choose your teams and see the picker only after sign-in', async () => {
+  const b = await browser();
+  assert.equal(b.elements.get('choose-teams').hidden, false);
+  assert.equal(b.elements.get('choose-teams').disabled, false);
+  assert.equal(b.elements.get('picker-content').hidden, true);
+  assert.equal(b.elements.get('prediction').hidden, true);
+  assert.equal(b.elements.get('mobile-progress').hidden, true);
+  b.elements.get('choose-teams').events.get('click')();
+  assert.equal(b.elements.get('auth-dialog').open, true);
+  assert.equal(b.elements.get('auth-register-tab').attributes['aria-pressed'], 'true');
+  b.elements.get('auth-dialog').close();
+  b.apply(account());
+  assert.equal(b.elements.get('choose-teams').hidden, true);
+  assert.equal(b.elements.get('picker-content').hidden, false);
+  assert.equal(b.elements.get('prediction').hidden, false);
+  await b.run('logout()');
+  assert.equal(b.elements.get('choose-teams').hidden, false);
+  assert.equal(b.elements.get('picker-content').hidden, true);
+  assert.equal(b.elements.get('mobile-progress').hidden, true);
+});
+
+test('public shared predictions remain viewable by guests', async () => {
+  const b = await browser();
+  b.run("location.href = 'https://hockey.example/?picks=BOS.CAR'; readShared(); updateSummary()");
+  assert.equal(b.elements.get('choose-teams').hidden, true);
+  assert.equal(b.elements.get('picker-content').hidden, false);
+  assert.equal(b.elements.get('prediction').hidden, false);
+  assert.equal(b.elements.get('shared-banner').hidden, false);
+});
+
 test('expired account drafts stay private and the independent guest draft returns', async () => {
   const b = await browser();
   b.apply(account(1, ['BOS']));
@@ -169,17 +199,25 @@ test('cancelled and failed sign-in dialogs clear password fields', async () => {
   assert.match(b.elements.get('auth-error').textContent, /Incorrect/);
 });
 
-test('new registrations require 15 characters while existing logins retain 10', async () => {
+test('registration and login accept seven-character passwords and reject shorter ones', async () => {
   const b = await browser();
   b.run("setAuthMode('register')");
-  assert.equal(b.elements.get('account-password').minLength, 15);
-  b.elements.get('account-password').value = 'twelvechars!';
-  b.elements.get('account-password-confirm').value = 'twelvechars!';
+  assert.equal(b.elements.get('account-password').minLength, 7);
+  assert.equal(b.elements.get('account-password-confirm').minLength, 7);
+  b.elements.get('account-password').value = 'sixsix';
+  b.elements.get('account-password-confirm').value = 'sixsix';
   await b.elements.get('auth-form').events.get('submit')({preventDefault(){}});
   assert.ok(!b.calls.some(call => call.path === '/api/register'));
-  assert.match(b.elements.get('auth-error').textContent, /15/);
+  assert.match(b.elements.get('auth-error').textContent, /7–128/);
+  b.elements.get('account-password').value = 'seven77';
+  b.elements.get('account-password-confirm').value = 'seven77';
+  await b.elements.get('auth-form').events.get('submit')({preventDefault(){}});
+  assert.ok(b.calls.some(call => call.path === '/api/register' && call.body.password === 'seven77'));
   b.run("setAuthMode('login')");
-  assert.equal(b.elements.get('account-password').minLength, 10);
+  assert.equal(b.elements.get('account-password').minLength, 7);
+  b.elements.get('account-password').value = 'seven77';
+  await b.elements.get('auth-form').events.get('submit')({preventDefault(){}});
+  assert.ok(b.calls.some(call => call.path === '/api/login' && call.body.password === 'seven77'));
 });
 
 test('untrusted account names are escaped in headers and leaderboard HTML', async () => {

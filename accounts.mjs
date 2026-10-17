@@ -51,8 +51,8 @@ function validateUsername(username) {
 
 function validatePassword(password) {
   const length = passwordLength(password);
-  if (length < 15 || length > 128) {
-    throw failure(400, 'Use a password with 15–128 characters.');
+  if (length < 7 || length > 128) {
+    throw failure(400, 'Use a password with 7–128 characters.');
   }
 }
 
@@ -262,7 +262,7 @@ export function createAccountStore(dbPath) {
       const canonicalName = typeof username === 'string' && /^[A-Za-z0-9_]{3,24}$/.test(username)
         ? username.toLowerCase() : null;
       const length = passwordLength(password);
-      const validPassword = length >= 10 && length <= 128;
+      const validPassword = length >= 7 && length <= 128;
       return authenticate(async () => {
         const user = canonicalName ? query.userByName.get(canonicalName) : null;
         const legacy = user?.password_scheme === LEGACY_PASSWORD_SCHEME;

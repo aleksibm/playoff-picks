@@ -116,6 +116,15 @@ function guidance(progress) {
 }
 function updateSummary() {
   invalidateContextDialogs();
+  const showPicker = Boolean(session.user) || shared;
+  $('board-layout').classList.toggle('guest', !showPicker);
+  $('picker-content').hidden = !showPicker;
+  $('prediction').hidden = !showPicker;
+  $('board-description').hidden = !showPicker;
+  $('board-note').hidden = !showPicker;
+  $('mobile-progress').hidden = !showPicker;
+  $('choose-teams').hidden = showPicker;
+  $('choose-teams').disabled = accountBusy || sessionLoading;
   const progress = getProgress(picks);
   $('total').textContent = String(progress.total).padStart(2, '0');
   $('mobile-count').textContent = `${progress.total} / 16`;
@@ -296,11 +305,9 @@ function renderAccountControls() {
     $('logout').disabled = accountBusy || submitting;
     $('logout').addEventListener('click', logout);
   } else {
-    $('auth-controls').innerHTML = '<button type="button" id="open-login" class="login-button">Log in</button><button type="button" id="open-register" class="small-button">Create account</button>';
+    $('auth-controls').innerHTML = '<button type="button" id="open-login" class="login-button">Log in</button>';
     $('open-login').disabled = accountBusy || sessionLoading;
-    $('open-register').disabled = accountBusy || sessionLoading;
     $('open-login').addEventListener('click', () => openAuth('login'));
-    $('open-register').addEventListener('click', () => openAuth('register'));
   }
 }
 function applySession(data, {initialPicks = []} = {}) {
@@ -356,6 +363,7 @@ async function saveAccountDraft(generation = authGeneration) {
     return false;
   }
 }
+$('choose-teams').addEventListener('click', () => openAuth('register'));
 function openAuth(mode = 'login') {
   if (accountBusy || submitting || sessionLoading || session.user) return;
   setAuthMode(mode);
@@ -372,9 +380,9 @@ function setAuthMode(mode) {
   $('password-confirm-row').hidden = !register;
   $('account-password-confirm').required = register;
   $('account-password').autocomplete = register ? 'new-password' : 'current-password';
-  $('account-password').minLength = register ? 15 : 10;
-  $('account-password-confirm').minLength = 15;
-  $('password-hint').textContent = register ? 'Use 15–128 characters. A unique passphrase works well.' : 'Use the password you created for this account.';
+  $('account-password').minLength = 7;
+  $('account-password-confirm').minLength = 7;
+  $('password-hint').textContent = register ? 'Use 7–128 characters. A unique passphrase works well.' : 'Use the password you created for this account.';
   $('auth-submit').textContent = register ? 'Create account' : 'Log in';
   $('auth-error').textContent = '';
   $('account-password').value = '';
@@ -391,7 +399,7 @@ $('auth-form').addEventListener('submit', async event => {
   if (accountBusy || sessionLoading || session.user) return;
   const password = $('account-password').value;
   const passwordLength = Array.from(password).length;
-  if (passwordLength < (authMode === 'register' ? 15 : 10) || passwordLength > 128) { $('auth-error').textContent = authMode === 'register' ? 'Use a password with 15–128 characters.' : 'Use a password with 10–128 characters.'; return; }
+  if (passwordLength < 7 || passwordLength > 128) { $('auth-error').textContent = 'Use a password with 7–128 characters.'; return; }
   if (authMode === 'register' && password !== $('account-password-confirm').value) { $('auth-error').textContent = 'The passwords do not match.'; return; }
   const guestPicks = !shared && !session.user ? [...picks] : [];
   accountBusy = true;

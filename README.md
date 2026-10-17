@@ -16,8 +16,8 @@ Opening an HTML file directly cannot provide account storage or the shared leade
 
 ## Accounts and predictions
 
-- Create a username and a password of at least 15 characters, or log back in. Existing accounts keep their current passwords.
-- Draft picks automatically save to the signed-in account. Guests can prepare picks before signing up.
+- Create a username and a password of at least 7 characters, or log back in. Existing accounts keep their current passwords.
+- Guests use **Choose your teams** to create an account, or **Log in** to return to an existing account. The team picker appears after sign-in, and draft picks automatically save to the account. Shared predictions remain viewable by guests.
 - Pick 16 teams: eight per conference, with at least three and at most five from each division.
 - Submit the completed prediction to join the leaderboard. The prediction is permanently locked for this season.
 - Each account has one leaderboard entry for the 2026–27 season.
