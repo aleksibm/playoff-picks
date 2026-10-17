@@ -15,6 +15,7 @@ let recoveryDraft = null;
 let sessionUnavailable = false, checkingSession = false, pendingSessionCheck = false;
 let submissionContext = null, resetContext = null;
 const isLocked = () => session.prediction?.state === 'submitted';
+const canViewLeaderboard = () => Boolean(session.user) && isLocked() && !sessionLoading && !accountBusy;
 const isReadOnly = () => shared || isLocked() || sessionLoading || accountBusy || submitting;
 function predictionContext() {
   return {generation:authGeneration, userId:session.user?.id ?? null,
@@ -116,6 +117,7 @@ function guidance(progress) {
 }
 function updateSummary() {
   invalidateContextDialogs();
+  if (!canViewLeaderboard()) renderLeaderboardLock();
   const showPicker = Boolean(session.user) || shared;
   $('board-layout').classList.toggle('guest', !showPicker);
   $('picker-content').hidden = !showPicker;
@@ -193,6 +195,11 @@ function readShared() {
     shared = false;
     picks = [...storedDraft];
     clearShareHash();
+    return false;
+  }
+  if (!canViewLeaderboard()) {
+    shared = false;
+    picks = [...storedDraft];
     return false;
   }
   picks = result;
@@ -318,11 +325,14 @@ function applySession(data, {initialPicks = []} = {}) {
   accountBusy = false;
   clearTimeout(saveTimer);
   storedDraft = session.user ? [...(session.prediction?.teamIds || initialPicks)] : readGuestDraft();
-  if (!shared) picks = [...storedDraft];
+  shared = false;
+  picks = [...storedDraft];
+  readShared();
   saveLabel = session.user ? session.prediction ? 'Saved to your account' : 'Account draft ready' : '';
   renderAccountControls();
   updateBoard();
   updateSummary();
+  void loadLeaderboard();
 }
 function readGuestDraft() {
   try { return sanitizePicks(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')); } catch { return []; }
@@ -441,6 +451,7 @@ $('auth-form').addEventListener('submit', async event => {
 async function logout() {
   if (accountBusy || submitting) return;
   accountBusy = true;
+  renderLeaderboardLock();
   renderAccountControls();
   updateBoard();
   clearTimeout(saveTimer);
@@ -521,12 +532,30 @@ function readableDate(value) {
   const date = new Date(value.length === 10 ? `${value}T12:00:00Z` : value);
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('en-GB', {timeZone:'Europe/Helsinki',day:'numeric',month:'short',year:'numeric'});
 }
+function renderLeaderboardLock() {
+  $('score-source').classList.remove('available');
+  $('score-source').textContent = 'Unlocks after you submit your prediction';
+  $('leaderboard-status').textContent = '';
+  $('refresh-leaderboard').hidden = true;
+  $('refresh-leaderboard').disabled = true;
+  $('leaderboard-body').innerHTML = '<div class="leaderboard-empty"><strong>Make your prediction first.</strong>Submit and lock your 16 teams to reveal the leaderboard and other players’ picks.<br><button type="button" id="leaderboard-unlock" class="small-button">'+(session.user ? 'Finish my prediction ↗' : 'Choose your teams ↗')+'</button></div>';
+  $('leaderboard-unlock').disabled = sessionLoading || accountBusy;
+  $('leaderboard-unlock').addEventListener('click', () => {
+    if (session.user) { $('team-board').scrollIntoView({behavior:'smooth'}); $('team-board').focus({preventScroll:true}); }
+    else openAuth('register');
+  });
+}
 async function loadLeaderboard() {
+  if (!canViewLeaderboard()) { renderLeaderboardLock(); return; }
   if (leaderboardLoading) return;
+  const generation = authGeneration;
   leaderboardLoading = true;
+  $('refresh-leaderboard').hidden = false;
   $('refresh-leaderboard').disabled = true;
   try {
     const data = await api('/api/leaderboard');
+    if (generation !== authGeneration || !canViewLeaderboard()) return;
+    if (data.locked) { renderLeaderboardLock(); await reconcileSignIn({announce:false}); return; }
     const scoring = data.scoring;
     $('score-source').classList.toggle('available', Boolean(scoring.available && !scoring.stale && !scoring.error));
     $('score-source').textContent = scoring.available ? `${scoring.stale || scoring.error ? 'Last verified' : 'NHL standings'} · ${readableDate(scoring.asOf)}` : 'Waiting for verified 2026–27 NHL points';
@@ -540,11 +569,17 @@ async function loadLeaderboard() {
     const own = data.entries.find(entry => entry.id === session.user?.id);
     if (own && isLocked()) { session.score = own.points; $('account-points').textContent = Number.isInteger(own.points) ? `${own.points} pts` : '—'; }
   } catch {
+    if (generation !== authGeneration || !canViewLeaderboard()) return;
     $('score-source').textContent = 'Leaderboard unavailable';
     $('score-source').classList.remove('available');
     $('leaderboard-status').textContent = 'The leaderboard could not be loaded. Try refreshing the table.';
     if (!$('leaderboard-body').querySelector('table')) $('leaderboard-body').innerHTML = '<p class="leaderboard-empty">The season leaderboard will appear here when the connection returns.</p>';
-  } finally { leaderboardLoading = false; $('refresh-leaderboard').disabled = false; }
+  } finally {
+    leaderboardLoading = false;
+    $('refresh-leaderboard').disabled = !canViewLeaderboard();
+    if (!canViewLeaderboard()) renderLeaderboardLock();
+    else if (generation !== authGeneration) void loadLeaderboard();
+  }
 }
 $('refresh-leaderboard').addEventListener('click', loadLeaderboard);
 

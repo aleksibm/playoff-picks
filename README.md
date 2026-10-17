@@ -17,9 +17,10 @@ Opening an HTML file directly cannot provide account storage or the shared leade
 ## Accounts and predictions
 
 - Create a username and a password of at least 7 characters, or log back in. Existing accounts keep their current passwords.
-- Guests use **Choose your teams** to create an account, or **Log in** to return to an existing account. The team picker appears after sign-in, and draft picks automatically save to the account. Shared predictions remain viewable by guests.
+- Guests use **Choose your teams** to create an account, or **Log in** to return to an existing account. The team picker appears after sign-in, and draft picks automatically save to the account.
 - Pick 16 teams: eight per conference, with at least three and at most five from each division.
 - Submit the completed prediction to join the leaderboard. The prediction is permanently locked for this season.
+- The leaderboard and other players' picks unlock only after submitting your own complete prediction. Guests, unfinished picks, and complete but unsubmitted drafts cannot view entries. The backend enforces this for leaderboard requests; shared-prediction links follow the same rule in the UI.
 - Each account has one leaderboard entry for the 2026–27 season.
 - Logging out does not remove the account or its prediction.
 
@@ -45,7 +46,7 @@ Passwords use salted scrypt hashes with bounded authentication work. Older passw
 
 Both Node listeners stay bound to 127.0.0.1. The supplied public setup uses `PLAYOFF_PICK_PUBLIC_ORIGIN=https://picks.aleksi.net`, `PLAYOFF_PICK_PROXY=cloudflare-tunnel`, and a named Cloudflare Tunnel. It validates the exact public Host and Origin and uses Cloudflare's edge visitor-IP header for rate limits. No inbound router ports are required. The old Sites static manifest is retained as historical project identity; publishing `dist/` alone will not provide the account backend.
 
-No email/password-recovery service is configured. Submitted usernames, selected teams, and scores are public; saved drafts are private to the account. Guests' drafts are stored on their own browser. Google Fonts supplies typography; team logos are served locally.
+No email/password-recovery service is configured. Submitted usernames, selected teams, and scores are visible to players who have submitted their own prediction; saved drafts are private to the account. Guests' drafts are stored on their own browser. Google Fonts supplies typography; team logos are served locally.
 
 ## Administration on the hosting computer
 

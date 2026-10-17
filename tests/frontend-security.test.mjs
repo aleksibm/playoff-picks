@@ -87,13 +87,63 @@ test('guests start registration from Choose your teams and see the picker only a
   assert.equal(b.elements.get('mobile-progress').hidden, true);
 });
 
-test('public shared predictions remain viewable by guests', async () => {
+test('shared predictions stay hidden until the viewer submits their own prediction', async () => {
   const b = await browser();
   b.run("location.href = 'https://hockey.example/?picks=BOS.CAR'; readShared(); updateSummary()");
+  assert.equal(b.elements.get('choose-teams').hidden, false);
+  assert.equal(b.elements.get('picker-content').hidden, true);
+  assert.equal(b.elements.get('shared-banner').hidden, true);
+  b.apply(account(1, ['UTA']));
+  assert.deepEqual(b.state().picks, ['UTA']);
+  assert.equal(b.elements.get('shared-banner').hidden, true);
+  const locked = account(1, completePicks());
+  locked.prediction.state = 'submitted';
+  b.apply(locked);
   assert.equal(b.elements.get('choose-teams').hidden, true);
   assert.equal(b.elements.get('picker-content').hidden, false);
   assert.equal(b.elements.get('prediction').hidden, false);
   assert.equal(b.elements.get('shared-banner').hidden, false);
+});
+
+test('the leaderboard stays locked for guests and complete unsubmitted drafts', async () => {
+  const b = await browser();
+  assert.match(b.elements.get('leaderboard-body').innerHTML, /Make your prediction first/);
+  b.apply(account(1, completePicks()));
+  assert.match(b.elements.get('leaderboard-body').innerHTML, /Finish my prediction/);
+  assert.equal(b.calls.filter(call => call.path === '/api/leaderboard').length, 0);
+});
+
+test('switching away from a submitted account clears entries and ignores an older response', async () => {
+  const read = deferred();
+  let intercept = false;
+  const locked = account(1, completePicks());
+  locked.prediction.state = 'submitted';
+  const entries = [{id:2,displayName:'OtherFan',teamIds:completePicks(),points:42,rank:1}];
+  const b = await browser({session:locked, route:path => path === '/api/leaderboard'
+    ? intercept ? read.promise : response({locked:false,scoring:{available:false},entries}) : undefined});
+  assert.match(b.elements.get('leaderboard-body').innerHTML, /OtherFan/);
+  intercept = true;
+  const pending = b.run('loadLeaderboard()');
+  b.apply(account(3, []));
+  assert.doesNotMatch(b.elements.get('leaderboard-body').innerHTML, /OtherFan/);
+  read.resolve(response({locked:false,scoring:{available:false},entries}));
+  await pending;
+  assert.match(b.elements.get('leaderboard-body').innerHTML, /Make your prediction first/);
+  assert.doesNotMatch(b.elements.get('leaderboard-body').innerHTML, /OtherFan/);
+});
+
+test('a server-denied leaderboard clears previous entries and reconciles an expired session', async () => {
+  let expired = false;
+  const locked = account(1, completePicks());
+  locked.prediction.state = 'submitted';
+  const b = await browser({session:locked, route:path => path === '/api/leaderboard'
+    ? response(expired ? {locked:true,entries:[]} : {locked:false,scoring:{available:false},entries:[{id:2,displayName:'OtherFan',teamIds:completePicks(),points:42,rank:1}]})
+    : path === '/api/session' && expired ? response(anonymous) : undefined});
+  assert.match(b.elements.get('leaderboard-body').innerHTML, /OtherFan/);
+  expired = true;
+  await b.run('loadLeaderboard()');
+  assert.equal(b.state().session.user, null);
+  assert.doesNotMatch(b.elements.get('leaderboard-body').innerHTML, /OtherFan/);
 });
 
 test('expired account drafts stay private and the independent guest draft returns', async () => {
@@ -222,7 +272,7 @@ test('registration and login accept seven-character passwords and reject shorter
 
 test('untrusted account names are escaped in headers and leaderboard HTML', async () => {
   const name = '<img src=x onerror=alert(1)>';
-  const state = account(); state.user.displayName = name;
+  const state = account(); state.user.displayName = name; state.prediction.state = 'submitted';
   const b = await browser({session:state, route:path => path === '/api/leaderboard' ? response({scoring:{available:false}, entries:[{id:1,displayName:name, teamIds:['BOS'],points:0,rank:1}]}) : undefined});
   for (const id of ['auth-controls','leaderboard-body']) {
     assert.ok(!b.elements.get(id).innerHTML.includes('<img src=x'));

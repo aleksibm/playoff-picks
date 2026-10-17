@@ -176,7 +176,38 @@ test('only complete valid predictions submit, then remain immutable and retry id
   assert.deepEqual(retry.data.prediction, submitted.data.prediction);
 });
 
-test('leaderboard scores actual standings totals publicly and isolates each account prediction', async t => {
+test('leaderboard hides other players until the viewer submits, including complete drafts and revoked sessions', async t => {
+  const {url} = await setup(t);
+  const publisher = client(url);
+  await publisher.register('SecretFan');
+  await publisher.request('/api/prediction/submit', 'POST', {teamIds:picks(),revision:0});
+  const viewer = client(url);
+  async function assertHidden() {
+    const result = await viewer.request('/api/leaderboard');
+    assert.equal(result.data.locked, true);
+    assert.deepEqual(result.data.entries, []);
+    assert.doesNotMatch(JSON.stringify(result.data), /SecretFan|teamIds|submittedAt/);
+    assert.equal(result.headers.get('cache-control'), 'no-store');
+  }
+  await assertHidden();
+  await viewer.register('ViewerFan');
+  await assertHidden();
+  await viewer.request('/api/prediction', 'PUT', {teamIds:['BOS'],revision:0});
+  await assertHidden();
+  await viewer.request('/api/prediction', 'PUT', {teamIds:picks(1),revision:1});
+  await assertHidden();
+  assert.equal((await viewer.request('/api/prediction/submit', 'POST', {teamIds:picks(1),revision:2})).status, 200);
+  const revealed = await viewer.request('/api/leaderboard');
+  assert.equal(revealed.data.locked, false);
+  assert.ok(revealed.data.entries.some(entry => entry.displayName === 'SecretFan'));
+  const cookie = viewer.cookie;
+  await viewer.request('/api/logout', 'POST', {});
+  await assertHidden();
+  const revoked = await fetch(`${url}/api/leaderboard`, {headers:{Cookie:cookie}});
+  assert.equal((await revoked.json()).locked, true);
+});
+
+test('leaderboard scores actual standings totals for submitted players and isolates each account prediction', async t => {
   const verified = snapshot();
   const { url } = await setup(t, { standingsProvider: async () => verified });
   const alpha = client(url);
@@ -188,7 +219,7 @@ test('leaderboard scores actual standings totals publicly and isolates each acco
   await alpha.request('/api/prediction/submit', 'POST', { teamIds: picks(), revision: 0 });
   await beta.request('/api/prediction/submit', 'POST', { teamIds: picks(1), revision: 0 });
   await gamma.request('/api/prediction/submit', 'POST', { teamIds: picks(), revision: 0 });
-  const leaderboard = await client(url).request('/api/leaderboard');
+  const leaderboard = await alpha.request('/api/leaderboard');
   assert.equal(leaderboard.data.season, 20262027);
   assert.deepEqual(leaderboard.data.entries.map(entry => entry.username), ['betafan', 'alphafan', 'gammafan']);
   assert.deepEqual(leaderboard.data.entries.map(entry => entry.rank), [1, 2, 2]);
@@ -280,7 +311,7 @@ test('no verified standings means honest unavailable scores, never a fake zero l
   const submitted = await fan.request('/api/prediction/submit', 'POST', { teamIds: picks(), revision: 0 });
   assert.equal(submitted.data.score, null);
   assert.equal(submitted.data.scoring.available, false);
-  const leaderboard = await client(url).request('/api/leaderboard');
+  const leaderboard = await fan.request('/api/leaderboard');
   assert.equal(leaderboard.data.entries[0].points, null);
   assert.equal(leaderboard.data.entries[0].rank, null);
   assert.match(leaderboard.data.scoring.error, /disabled/);

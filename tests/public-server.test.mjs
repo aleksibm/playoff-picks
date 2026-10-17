@@ -58,7 +58,13 @@ test('public HTTPS account flow has secure cookies, CSRF, ownership and permanen
   const stranger = await send('/api/register', { method: 'POST', body: { username: 'OtherPublicFan', password: PASSWORD }, ip: '203.0.113.2' });
   assert.equal(stranger.status, 200);
   assert.equal((await send('/api/session', { headers: { Cookie: stranger.headers['set-cookie'][0].split(';')[0] } })).data.prediction, null);
-  const leaderboard = await send('/api/leaderboard');
+  const hidden = await send('/api/leaderboard');
+  assert.equal(hidden.data.locked, true);
+  assert.deepEqual(hidden.data.entries, []);
+  const strangerBoard = await send('/api/leaderboard', {headers:{Cookie:stranger.headers['set-cookie'][0].split(';')[0]}});
+  assert.equal(strangerBoard.data.locked, true);
+  const leaderboard = await send('/api/leaderboard', {headers});
+  assert.equal(leaderboard.data.locked, false);
   assert.equal(leaderboard.data.entries.length, 1);
   assert.equal(leaderboard.data.entries[0].username, 'publicfan');
   for (const secret of [PASSWORD, fan.data.csrfToken, headers.Cookie.split('=')[1]]) {

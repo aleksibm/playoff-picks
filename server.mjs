@@ -274,10 +274,14 @@ export function createApp(options = {}) {
         return json(response, 200, { prediction, score: predictionScore(prediction), scoring: scoringMetadata() });
       }
       if (path === '/api/leaderboard' && request.method === 'GET') {
+        const viewer = store.getSession(cookieToken(request, hosting.cookieName));
+        if (!viewer || store.getPrediction(viewer.user.id)?.state !== 'submitted') {
+          return json(response, 200, { locked:true, entries:[], season:TARGET_SEASON });
+        }
         const submitted = store.listSubmitted();
         const entries = snapshot ? rankEntries(submitted, snapshot)
           : submitted.map(entry => ({ ...entry, points: null, rank: null }));
-        return json(response, 200, { entries, scoring: scoringMetadata(), season: TARGET_SEASON });
+        return json(response, 200, { locked:false, entries, scoring: scoringMetadata(), season: TARGET_SEASON });
       }
       if (path === '/api/standings' && request.method === 'GET') {
         return json(response, 200, { season: TARGET_SEASON, teams: snapshot?.teams ?? null, scoring: scoringMetadata() });
