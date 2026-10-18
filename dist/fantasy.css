@@ -6,3 +6,5 @@
 @media(max-width:800px){.half-rink{min-height:370px;padding-left:calc((100% - min(430px,90%))/2);padding-right:calc((100% - min(430px,90%))/2)}.half-rink-lines{max-width:470px;left:50%;transform:translateX(-50%)}.half-rink .roster-slots{gap:22px 12px}}
 @media(max-width:520px){.half-rink{min-height:366px;padding:25px 15px 43px}.half-rink .roster-slots{gap:23px 7px}.half-rink .slot-main{min-height:77px}}
 @media(prefers-reduced-motion:reduce){.fantasy-page *{scroll-behavior:auto!important;transition:none!important}}
+.fantasy-page [hidden]{display:none!important}.fantasy-guest{padding:32px 0 40px;border-bottom:1px solid var(--line)}.fantasy-guest h2{font-family:var(--condensed);font-size:38px}.fantasy-guest p{font-size:12px;line-height:1.9;color:var(--muted);max-width:520px}.fantasy-guest .primary-button{padding:15px 24px;margin-top:14px}.fantasy-page .market-empty .primary-button{padding:12px 20px;margin-top:20px}
+.fantasy-budget>#portfolio-value{grid-column:1/-1;font-size:9px;line-height:1.7;color:#dacbbe;font-weight:400}.fantasy-page .site-header nav{flex-wrap:wrap}

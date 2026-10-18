@@ -167,15 +167,18 @@ test('HTTP fantasy uses shared accounts but independent rosters, scoreboards and
   assert.equal(reg.response.status,200);assert.equal(Object.hasOwn(reg.data,'prediction'),false);
   const cookie=reg.response.headers.get('set-cookie').split(';')[0],csrf=reg.data.csrfToken;
   const denied=await request('/api/fantasy/submit',{method:'POST',cookie,body:{playerIds:initial,revision:0}});assert.equal(denied.response.status,403);
-  const submit=await request('/api/fantasy/submit',{method:'POST',cookie,csrf,body:{playerIds:initial,revision:0,cost:0,transfers:0}});assert.equal(submit.response.status,200);assert.equal(submit.data.score.points,0);
+  const stalePrice=await request('/api/fantasy/submit',{method:'POST',cookie,csrf,body:{playerIds:initial,revision:0,priceVersion:'stale'}});assert.equal(stalePrice.response.status,409);
+  const submit=await request('/api/fantasy/submit',{method:'POST',cookie,csrf,body:{playerIds:initial,revision:0,priceVersion:reg.data.market.version,cost:0,transfers:0}});assert.equal(submit.response.status,200);assert.equal(submit.data.score.points,0);
   const playoff=await request('/api/session',{cookie});assert.equal(playoff.data.prediction,null);assert.equal(playoff.data.user.id,reg.data.user.id);
-  const league=await request('/api/fantasy/leaderboard');assert.equal(league.data.entries.length,1);
+  const guestLeague=await request('/api/fantasy/leaderboard');assert.equal(guestLeague.data.locked,true);assert.deepEqual(guestLeague.data.entries,[]);
+  const league=await request('/api/fantasy/leaderboard',{cookie});assert.equal(league.data.entries.length,1);
   const publicCatalog=await request('/api/fantasy/players');assert.equal(publicCatalog.data.players.length,players.length);
   assert.equal(publicCatalog.data.players.find(p=>p.id===6).pending,true);
   assert.equal(publicCatalog.data.players.find(p=>p.id===6).seasonPoints,12.5);
   const playoffLeague=await request('/api/leaderboard',{cookie});assert.equal(playoffLeague.data.locked,true);
   const attacker=await request('/api/fantasy/register',{method:'POST',body:{username:'OtherFan',password:'another-password-test'}});
   const otherCookie=attacker.response.headers.get('set-cookie').split(';')[0];
+  const otherLeague=await request('/api/fantasy/leaderboard',{cookie:otherCookie});assert.equal(otherLeague.data.locked,true);assert.deepEqual(otherLeague.data.entries,[]);
   const other=await request('/api/fantasy/session',{cookie:otherCookie});assert.deepEqual(other.data.entry.activePlayerIds,[]);
 });
 

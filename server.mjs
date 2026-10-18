@@ -11,9 +11,13 @@ import { TARGET_SEASON, fetchStandings, scorePrediction, rankEntries } from './s
 import { hostingConfig, requestContext, createRateLimiter } from './hosting.mjs';
 import { fetchFantasySnapshot, validateFantasySnapshot, scoreFantasyHistory } from './fantasy-scoring.mjs';
 import { FANTASY_SEASON, BUDGET } from './dist/fantasy-rules.js';
+import { buildPlayerValues } from './player-values.mjs';
+import { createContractUpdater, fetchContractSnapshot } from './contract-updates.mjs';
+import { initialMarket, validateMarket, pricedPlayers, updateWeeklyPrices, previousPriceUpdate, nextPriceUpdate } from './market-prices.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FANTASY_CATALOG = JSON.parse(readFileSync(join(HERE,'fantasy-players.json'),'utf8'));
+const PLAYER_CONTRACTS = JSON.parse(readFileSync(join(HERE,'player-contracts.json'),'utf8'));
 const MAX_BODY = 8 * 1024;
 const SESSION_SECONDS = 7 * 24 * 60 * 60;
 const UPDATE_GRACE_MS = 5 * 60 * 1000;
@@ -30,6 +34,11 @@ const STATIC_FILES = new Map([
   ['/fantasy.css', ['fantasy.css', 'text/css; charset=utf-8']],
   ['/fantasy.js', ['fantasy.js', 'text/javascript; charset=utf-8']],
   ['/fantasy-rules.js', ['fantasy-rules.js', 'text/javascript; charset=utf-8']],
+  ['/fantasy/value', ['player-value.html', 'text/html; charset=utf-8']],
+  ['/fantasy/value/', ['player-value.html', 'text/html; charset=utf-8']],
+  ['/player-value.css', ['player-value.css', 'text/css; charset=utf-8']],
+  ['/player-value.js', ['player-value.js', 'text/javascript; charset=utf-8']],
+  ['/value-rules.js', ['value-rules.js', 'text/javascript; charset=utf-8']],
   ...TEAMS.map(team => [`/logos/${team.id}.svg`, [`logos/${team.id}.svg`, 'image/svg+xml']]),
 ]);
 
@@ -159,7 +168,12 @@ export function createApp(options = {}) {
     chmodSync(directory, 0o700);
   }
   const fantasyCatalog = options.fantasyCatalog ?? FANTASY_CATALOG;
-  const store = createAccountStore(dbPath,{fantasyPlayers:fantasyCatalog.players,now});
+  const marketCachePath=options.marketCachePath??(dbPath===':memory:'?null:join(dirname(dbPath),'market-prices.json'));
+  let market=initialMarket(fantasyCatalog);
+  if(marketCachePath&&existsSync(marketCachePath)){
+    try{if(statSync(marketCachePath).size>1024*1024)throw Error();const saved=validateMarket(fantasyCatalog,JSON.parse(readFileSync(marketCachePath,'utf8')));if(Date.parse(saved.asOf)>now())throw Error();if(Date.parse(saved.asOf)>=Date.parse(market.asOf))market=saved;}catch{throw Error('Saved fantasy prices could not be verified. Restore the verified market-prices.json backup before trading.');}
+  }
+  const store = createAccountStore(dbPath,{fantasyPlayers:fantasyCatalog.players,fantasyPrices:()=>({players:pricedPlayers(fantasyCatalog,market),version:market.version}),now});
   const fantasyCachePath = options.fantasyCachePath ?? (dbPath === ':memory:' ? null : join(dirname(dbPath),'fantasy-scores.json'));
   const allowFantasyFetch = options.allowFantasyFetch ?? (options.standingsProvider ? false : options.allowStandingsFetch ?? process.env.PLAYOFF_PICK_FETCH_FANTASY !== '0');
   const canRefreshFantasy = Boolean(options.fantasyProvider) || allowFantasyFetch;
@@ -171,6 +185,16 @@ export function createApp(options = {}) {
   let refreshing = null;
   let closed = false;
   const rateLimit = createRateLimiter({ now });
+  const contractCachePath=options.contractCachePath??(dbPath===':memory:'?null:join(dirname(dbPath),'contract-values.json'));
+  const bundledContracts=options.contracts??PLAYER_CONTRACTS;
+  let contractState={snapshot:bundledContracts};
+  if(contractCachePath&&existsSync(contractCachePath)){
+    try{if(statSync(contractCachePath).size>4*1024*1024)throw Error();const saved=JSON.parse(readFileSync(contractCachePath,'utf8'));buildPlayerValues(fantasyCatalog,saved.snapshot);if(saved.snapshot.asOf>=bundledContracts.asOf)contractState=saved;}catch{}
+  }
+  const canRefreshContracts=Boolean(options.contractProvider)||(options.allowContractFetch??(options.standingsProvider||options.fantasyProvider?false:options.allowStandingsFetch??process.env.PLAYOFF_PICK_FETCH_CONTRACTS!=='0'));
+  const contractUpdater=createContractUpdater({catalog:fantasyCatalog,initial:contractState.snapshot,state:contractState,now,
+    run:options.contractProvider??(previous=>fetchContractSnapshot({catalog:fantasyCatalog,previous,now:now()})),
+    save:state=>{if(contractCachePath)saveSnapshot(contractCachePath,state);}});
 
   if(fantasyCachePath&&existsSync(fantasyCachePath)){
     try{if(statSync(fantasyCachePath).size>16*1024*1024)throw new Error('Oversized fantasy cache');fantasySnapshot=validateFantasySnapshot(JSON.parse(readFileSync(fantasyCachePath,'utf8')));}
@@ -181,16 +205,18 @@ export function createApp(options = {}) {
     gameCount:fantasySnapshot?.games.length??0,stale:Boolean(fantasySnapshot&&Date.parse(fantasySnapshot.fetchedAt)<previousDailyUpdate(now()-UPDATE_GRACE_MS)),
     error:fantasyError??(!fantasySnapshot?(canRefreshFantasy?'Fantasy scores are awaiting a verified 2026–27 update.':'Live fantasy updates are disabled in this preview.'):null),
     modelError:fantasySnapshot?.modelError??null};}
+  function marketMetadata(){return {version:market.version,asOf:market.asOf,overdue:Date.parse(market.asOf)<previousPriceUpdate(now()),nextUpdate:new Date(nextPriceUpdate(now())).toISOString(),timeZone:'Europe/Helsinki',day:'Monday',time:'12:00',lastSeasonWeight:.75,currentSeasonWeight:.25,weeklyLimit:.05,minimumGames:5,skaterProjectionGames:82,goalieProjectionGames:55};}
+  function refreshMarket(){const next=updateWeeklyPrices(fantasyCatalog,market,fantasySnapshot,now());if(next!==market){if(marketCachePath)saveSnapshot(marketCachePath,next);market=next;}}
   function fantasyBody(session){
     const entry=session?store.getFantasy(session.user.id):null;
     return {user:session?.user??null,csrfToken:session?.csrfToken??null,entry,
-      score:entry?.submittedAt?scoreFantasyHistory(store.fantasyHistory(session.user.id),fantasySnapshot):{points:null,pending:false,players:{}},scoring:fantasyMetadata(),season:FANTASY_SEASON};
+      score:entry?.submittedAt?scoreFantasyHistory(store.fantasyHistory(session.user.id),fantasySnapshot):{points:null,pending:false,players:{}},scoring:fantasyMetadata(),market:marketMetadata(),season:FANTASY_SEASON};
   }
   async function refreshFantasy(){
     if(closed||!canRefreshFantasy)return fantasyMetadata();
     if(fantasyRefreshing)return fantasyRefreshing;
     fantasyRefreshing=(async()=>{
-      try{const next=validateFantasySnapshot(await fantasyProvider());if(closed)return fantasyMetadata();if(fantasyCachePath)saveSnapshot(fantasyCachePath,next);fantasySnapshot=next;fantasyError=null;}
+      try{const next=validateFantasySnapshot(await fantasyProvider());if(closed)return fantasyMetadata();if(fantasyCachePath)saveSnapshot(fantasyCachePath,next);fantasySnapshot=next;fantasyError=null;refreshMarket();}
       catch{fantasyError=fantasySnapshot?'Fantasy scores use the last verified update because the latest refresh failed.':'Fantasy statistics could not be verified. Scores will appear after a successful update.';}
       return fantasyMetadata();
     })();
@@ -279,12 +305,15 @@ export function createApp(options = {}) {
         return json(response, 200, sessionBody(store.getSession(cookieToken(request, hosting.cookieName))));
       }
       if(path==='/api/fantasy/session'&&request.method==='GET')return json(response,200,fantasyBody(store.getSession(cookieToken(request,hosting.cookieName))));
+      if(path==='/api/fantasy/value'&&request.method==='GET')return json(response,200,{...buildPlayerValues({...fantasyCatalog,players:pricedPlayers(fantasyCatalog,market)},contractUpdater.getSnapshot()),market:marketMetadata(),updateSchedule:contractUpdater.metadata()});
       if(path==='/api/fantasy/players'&&request.method==='GET'){
         const totals=new Map(),currentTeams=new Map(),pending=new Set();
         for(const game of fantasySnapshot?.games??[]){for(const [id,value] of Object.entries(game.scores))totals.set(Number(id),(totals.get(Number(id))??0)+value);for(const [id,team] of Object.entries(game.teams))currentTeams.set(Number(id),team);for(const id of game.pending)pending.add(id);}
-        return json(response,200,{...fantasyCatalog,budget:BUDGET,players:fantasyCatalog.players.map(p=>({...p,team:currentTeams.get(p.id)??p.team,seasonPoints:fantasySnapshot?(totals.get(p.id)??0):null,pending:pending.has(p.id)})),scoring:fantasyMetadata()});
+        return json(response,200,{...fantasyCatalog,budget:BUDGET,players:pricedPlayers(fantasyCatalog,market).map(p=>({...p,team:currentTeams.get(p.id)??p.team,seasonPoints:fantasySnapshot?(totals.get(p.id)??0):null,pending:pending.has(p.id)})),scoring:fantasyMetadata(),market:marketMetadata()});
       }
       if(path==='/api/fantasy/leaderboard'&&request.method==='GET'){
+        const viewer=store.getSession(cookieToken(request,hosting.cookieName));
+        if(!viewer||!store.getFantasy(viewer.user.id)?.submittedAt)return json(response,200,{season:FANTASY_SEASON,locked:true,entries:[],scoring:fantasyMetadata()});
         const entries=store.listFantasySubmitted().map(user=>{
           const history=store.fantasyHistory(user.id);
           return {...user,playerIds:history.at(-1)?.playerIds??[],...scoreFantasyHistory(history,fantasySnapshot)};
@@ -294,8 +323,9 @@ export function createApp(options = {}) {
       }
       if((path==='/api/fantasy/roster'&&request.method==='PUT')||(path==='/api/fantasy/submit'&&request.method==='POST')){
         const session=requireSession(request),body=await readJSON(request);
-        if(path.endsWith('/submit'))store.submitFantasy(session.user.id,body.playerIds,body.revision);
-        else store.saveFantasyDraft(session.user.id,body.playerIds,body.revision);
+        if(body.priceVersion!==market.version)throw failure(409,'Player prices changed. Reload the market and review your team.');
+        if(path.endsWith('/submit'))store.submitFantasy(session.user.id,body.playerIds,body.revision,body.priceVersion);
+        else store.saveFantasyDraft(session.user.id,body.playerIds,body.revision,body.priceVersion);
         return json(response,200,fantasyBody(session));
       }
       if ((['/api/register','/api/login','/api/fantasy/register','/api/fantasy/login'].includes(path)) && request.method === 'POST') {
@@ -378,6 +408,8 @@ export function createApp(options = {}) {
   server.maxRequestsPerSocket = 100;
   if (hosting.secure) server.maxConnections = 256;
   server.on('listening', () => {
+    try{refreshMarket();}catch{}
+    if(canRefreshContracts)contractUpdater.start();
     if (canRefresh || canRefreshFantasy) {
       updateScheduler.start();
       // Restore missed noon updates after downtime, while reusing a current cache.
@@ -422,6 +454,7 @@ export function createApp(options = {}) {
     if (closed) return;
     closed = true;
     updateScheduler.stop();
+    await contractUpdater.stop();
     await admin.close();
     if (server.listening) {
       await new Promise((resolveClose, rejectClose) => server.close(error => error ? rejectClose(error) : resolveClose()));

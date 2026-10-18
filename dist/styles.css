@@ -23,4 +23,4 @@
 /* Classic NHL-inspired orange, paired with charcoal for readable controls. */
 :root{--accent:#f58220;--accent-soft:#ffe4cb;--accent-dark:#a7470b;--green:#a7470b;--lime:#f58220}
 .primary-button{background:var(--accent);color:var(--ink)}.primary-button:hover:not(:disabled){background:#ee7411;color:var(--ink)}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline-color:#c15d13}
-@media(max-width:600px){.site-header nav{display:flex;gap:15px}.site-header nav a{font-size:10px}.site-header nav a:nth-child(n+3){display:none}}
+@media(max-width:600px){.site-header{flex-wrap:wrap;row-gap:12px;padding-top:18px;padding-bottom:18px}.site-header nav{display:flex;gap:15px}.site-header nav a{font-size:10px}.site-header nav a:nth-child(n+4){display:none}}

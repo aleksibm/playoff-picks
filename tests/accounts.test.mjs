@@ -230,7 +230,7 @@ test('accounts, sessions, drafts and submissions survive reopening the database'
     assert.deepEqual((await reopened.login('FIRSTFAN', PASSWORD)).user, first.user);
     await assert.rejects(reopened.register('firstfan', PASSWORD), { status: 409 });
     assert.throws(() => reopened.saveDraft(second.user.id, ['BOS'], submitted.revision), { status: 409 });
-    assert.equal(inspect(path, db => db.prepare('PRAGMA user_version').get().user_version), 3);
+    assert.equal(inspect(path, db => db.prepare('PRAGMA user_version').get().user_version), 4);
     assert.equal(inspect(path, db => db.prepare('PRAGMA journal_mode').get().journal_mode), 'wal');
   } finally { reopened.close(); }
 });
@@ -363,7 +363,7 @@ test('version one accounts migrate without losing sessions or locked picks and u
   } finally { db.close(); }
   const store = createAccountStore(path);
   t.after(() => { store.close(); rmSync(directory, { recursive: true, force: true }); });
-  assert.equal(inspect(path, db => db.prepare('PRAGMA user_version').get().user_version), 3);
+  assert.equal(inspect(path, db => db.prepare('PRAGMA user_version').get().user_version), 4);
   assert.deepEqual(store.getSession(token), { user: { id: 1, username: 'legacyfan', displayName: 'LegacyFan' }, csrfToken: csrf });
   assert.equal(store.getPrediction(1).state, 'submitted');
   assert.deepEqual(store.getPrediction(1).teamIds, completePicks);
