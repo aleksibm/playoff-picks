@@ -1,5 +1,9 @@
 # Security and deployment review
 
+Fantasy addition, 18 October 2026: `/fantasy` shares only accounts and login sessions with Playoff Pick. Separate SQLite entries and append-only lineup history enforce the $40m cap, 1 G / 2 D / 3 F roster and two non-rolling transfers per Helsinki calendar month in a transaction. Mutations require the existing Origin and session CSRF protections and a current revision. Fantasy entry never changes prediction records or unlocks the prediction leaderboard. Game-start comparisons use epoch timestamps, protecting the first second of games. Only the original lineup scores an already-started game. Model data gaps remain visibly provisional. Player stats and team labels refresh from a daily server snapshot; browser requests never trigger upstream refreshes. Private data remains outside the static asset allowlist.
+
+The latest regression run passed 165 tests on Windows, with no failures and one POSIX permissions/symlink test skipped; those checks remain enabled on the Linux hosting machine. Desktop and mobile Fantasy browser checks passed, including account entry, roster selection and the orange theme. Existing mode assertions run only on systems that expose POSIX permissions. The SQLite restart test closes all database connections before its temporary files are removed on Windows. Database schema version 3 upgrades existing accounts in place; back up before deployment and restore the database backup if rolling back to the old backend.
+
 Reviewed 10 October 2026 for a small community NHL prediction game hosted on a dedicated Linux laptop, using **picks.aleksi.net through Cloudflare Tunnel**.
 
 Updated 17 October 2026: the password minimum is now 7 characters for registration and login, at the user's request. The 128-character maximum and password hashing settings are unchanged. The review below records the original 15-character minimum.

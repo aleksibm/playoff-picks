@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Account-backed NHL playoff predictions and standings leaderboard",
+  "description": "Independent NHL playoff predictions and six-player Fantasy with shared accounts",
   "engines": {
     "node": ">=24 <25"
   },

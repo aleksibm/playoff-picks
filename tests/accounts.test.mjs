@@ -75,9 +75,9 @@ test('passwords are salted scrypt hashes and opaque session tokens are hashed in
   assert.notEqual(session.token_hash, first.token);
   assert.ok(session.expires_at > Date.now() + 6.9 * 24 * 60 * 60 * 1000);
   assert.ok(session.expires_at <= Date.now() + 7 * 24 * 60 * 60 * 1000);
-  assert.equal(statSync(path).mode & 0o777, 0o600);
+  if (process.platform !== 'win32') assert.equal(statSync(path).mode & 0o777, 0o600);
   for (const filename of [path, `${path}-wal`, `${path}-shm`].filter(existsSync)) {
-    assert.equal(statSync(filename).mode & 0o777, 0o600);
+    if (process.platform !== 'win32') assert.equal(statSync(filename).mode & 0o777, 0o600);
     const bytes = readFileSync(filename);
     assert.equal(bytes.includes(Buffer.from(PASSWORD)), false);
     assert.equal(bytes.includes(Buffer.from(first.token)), false);
@@ -230,7 +230,7 @@ test('accounts, sessions, drafts and submissions survive reopening the database'
     assert.deepEqual((await reopened.login('FIRSTFAN', PASSWORD)).user, first.user);
     await assert.rejects(reopened.register('firstfan', PASSWORD), { status: 409 });
     assert.throws(() => reopened.saveDraft(second.user.id, ['BOS'], submitted.revision), { status: 409 });
-    assert.equal(inspect(path, db => db.prepare('PRAGMA user_version').get().user_version), 2);
+    assert.equal(inspect(path, db => db.prepare('PRAGMA user_version').get().user_version), 3);
     assert.equal(inspect(path, db => db.prepare('PRAGMA journal_mode').get().journal_mode), 'wal');
   } finally { reopened.close(); }
 });
@@ -318,7 +318,7 @@ test('password boundaries count Unicode code points and preserve the complete pa
   await assert.rejects(store.register('TooLongUnicode', '🏒'.repeat(129)), { status: 400 });
 });
 
-test('existing database permissions are tightened and symbolic-link database paths are refused', async t => {
+test('existing database permissions are tightened and symbolic-link database paths are refused', { skip: process.platform === 'win32' ? 'POSIX modes and unprivileged file symlinks require the Linux deployment host.' : false }, async t => {
   const { store, path } = fixture(t);
   await store.register('PermissionFan', PASSWORD);
   store.close();
@@ -363,7 +363,7 @@ test('version one accounts migrate without losing sessions or locked picks and u
   } finally { db.close(); }
   const store = createAccountStore(path);
   t.after(() => { store.close(); rmSync(directory, { recursive: true, force: true }); });
-  assert.equal(inspect(path, db => db.prepare('PRAGMA user_version').get().user_version), 2);
+  assert.equal(inspect(path, db => db.prepare('PRAGMA user_version').get().user_version), 3);
   assert.deepEqual(store.getSession(token), { user: { id: 1, username: 'legacyfan', displayName: 'LegacyFan' }, csrfToken: csrf });
   assert.equal(store.getPrediction(1).state, 'submitted');
   assert.deepEqual(store.getPrediction(1).teamIds, completePicks);

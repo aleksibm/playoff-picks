@@ -77,8 +77,10 @@ test('register creates a persistent real session with private cookies and no cre
   assert.equal((await fan.request('/api/session')).data.user.id, response.data.user.id);
   assert.ok(!JSON.stringify(response.data).includes(PASSWORD));
   assert.ok(!readFileSync(context.dbPath).includes(Buffer.from(PASSWORD)));
-  assert.equal(statSync(context.dbPath).mode & 0o777, 0o600);
-  assert.equal(statSync(context.directory).mode & 0o777, 0o700);
+  if (process.platform !== 'win32') {
+    assert.equal(statSync(context.dbPath).mode & 0o777, 0o600);
+    assert.equal(statSync(context.directory).mode & 0o777, 0o700);
+  }
 });
 
 test('seven-character passwords work through registration, logout, and login', async t => {
@@ -321,7 +323,7 @@ test('no verified standings means honest unavailable scores, never a fake zero l
 test('verified cache persists privately, rejected season preserves prior scores with a refresh error', async t => {
   let next = snapshot(new Date(previousDailyUpdate(Date.now() - 5 * 60 * 1000) - 60_000).toISOString());
   const { url, app, standingsCachePath } = await setup(t, { standingsProvider: async () => next });
-  assert.equal(statSync(standingsCachePath).mode & 0o777, 0o600);
+  if (process.platform !== 'win32') assert.equal(statSync(standingsCachePath).mode & 0o777, 0o600);
   assert.equal(JSON.parse(readFileSync(standingsCachePath, 'utf8')).season, 20262027);
   const before = await client(url).request('/api/standings');
   assert.equal(before.data.scoring.available, true);
@@ -343,12 +345,14 @@ test('saved accounts, sessions, submitted predictions, and verified scoring surv
   await context.app.close();
   const restarted = createApp({ dbPath: context.dbPath, standingsCachePath: context.standingsCachePath, allowStandingsFetch: false });
   await new Promise(resolve => restarted.server.listen(0, '127.0.0.1', resolve));
-  t.after(() => restarted.close());
+  // Close this connection before the fixture removes its files on Windows.
   const url = `http://127.0.0.1:${restarted.server.address().port}`;
-  const response = await fetch(`${url}/api/session`, { headers: { Cookie: cookie } });
-  const data = await response.json();
-  assert.equal(data.user.username, 'fanalpha');
-  assert.deepEqual(data.prediction, submitted.data.prediction);
-  assert.equal(data.score, submitted.data.score);
-  assert.equal(data.scoring.available, true);
+  try {
+    const response = await fetch(`${url}/api/session`, { headers: { Cookie: cookie } });
+    const data = await response.json();
+    assert.equal(data.user.username, 'fanalpha');
+    assert.deepEqual(data.prediction, submitted.data.prediction);
+    assert.equal(data.score, submitted.data.score);
+    assert.equal(data.scoring.available, true);
+  } finally { await restarted.close(); }
 });

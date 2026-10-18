@@ -4,6 +4,7 @@ import { promisify } from 'node:util';
 import { mkdirSync, chmodSync, lstatSync, existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { sanitizePicks, getProgress } from './dist/game.js';
+import { FANTASY_SEASON, TRANSFERS_PER_MONTH, transferMonth, validateRoster } from './dist/fantasy-rules.js';
 
 const deriveKey = promisify(scrypt);
 const SEASON = '20262027';
@@ -82,7 +83,7 @@ const validToken = token => typeof token === 'string' && /^[A-Za-z0-9_-]{43}$/.t
 const samePicks = (left, right) => left.length === right.length && left.every(id => right.includes(id));
 
 /** Local, durable accounts and one prediction per account for the current season. */
-export function createAccountStore(dbPath) {
+export function createAccountStore(dbPath, { fantasyPlayers = [], now: fantasyNow = Date.now } = {}) {
   if (dbPath !== ':memory:') {
     mkdirSync(dirname(dbPath), { recursive: true, mode: 0o700 });
     if (existsSync(dbPath)) {
@@ -94,7 +95,7 @@ export function createAccountStore(dbPath) {
   if (dbPath !== ':memory:') chmodSync(dbPath, 0o600);
   db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;');
   const version = db.prepare('PRAGMA user_version').get().user_version;
-  if (version > 2) {
+  if (version > 3) {
     db.close();
     throw new Error('This account database was created by a newer version of the site.');
   }
@@ -143,6 +144,24 @@ export function createAccountStore(dbPath) {
       COMMIT;
     `);
   }
+  if (version <= 2) {
+    db.exec(`BEGIN IMMEDIATE;
+      CREATE TABLE fantasy_entries (
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        season TEXT NOT NULL, player_ids TEXT NOT NULL,
+        state TEXT NOT NULL CHECK (state IN ('draft','submitted')),
+        submitted_at TEXT, updated_at TEXT NOT NULL, revision INTEGER NOT NULL,
+        PRIMARY KEY(user_id, season)
+      );
+      CREATE TABLE fantasy_lineups (
+        id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        season TEXT NOT NULL, player_ids TEXT NOT NULL, effective_at TEXT NOT NULL,
+        transfer_month TEXT NOT NULL, transfers INTEGER NOT NULL CHECK(transfers BETWEEN 0 AND 2)
+      );
+      CREATE INDEX fantasy_lineups_by_user ON fantasy_lineups(user_id, season, id);
+      PRAGMA user_version = 3;
+      COMMIT;`);
+  }
   if (dbPath !== ':memory:') {
     for (const path of [dbPath, `${dbPath}-wal`, `${dbPath}-shm`]) {
       if (existsSync(path)) chmodSync(path, 0o600);
@@ -179,6 +198,18 @@ export function createAccountStore(dbPath) {
       FROM users u LEFT JOIN predictions p ON p.user_id = u.id AND p.season = ?
       ORDER BY u.created_at DESC, u.id DESC`),
   };
+  const fantasyQuery = {
+    entry: db.prepare('SELECT * FROM fantasy_entries WHERE user_id = ? AND season = ?'),
+    history: db.prepare('SELECT player_ids, effective_at FROM fantasy_lineups WHERE user_id = ? AND season = ? ORDER BY id'),
+    latest: db.prepare('SELECT player_ids FROM fantasy_lineups WHERE user_id = ? AND season = ? ORDER BY id DESC LIMIT 1'),
+    used: db.prepare('SELECT COALESCE(SUM(transfers),0) AS total FROM fantasy_lineups WHERE user_id = ? AND season = ? AND transfer_month = ?'),
+    write: db.prepare(`INSERT INTO fantasy_entries(user_id,season,player_ids,state,submitted_at,updated_at,revision)
+      VALUES(?,?,?,?,?,?,?) ON CONFLICT(user_id,season) DO UPDATE SET player_ids=excluded.player_ids,
+      state=excluded.state,submitted_at=excluded.submitted_at,updated_at=excluded.updated_at,revision=excluded.revision`),
+    lineup: db.prepare('INSERT INTO fantasy_lineups(user_id,season,player_ids,effective_at,transfer_month,transfers) VALUES(?,?,?,?,?,?)'),
+    submitted: db.prepare(`SELECT u.id,u.username,u.display_name,e.submitted_at FROM fantasy_entries e JOIN users u ON u.id=e.user_id WHERE e.season=? AND e.state='submitted' ORDER BY e.submitted_at,u.id`),
+  };
+  const fantasyCatalog = new Map(fantasyPlayers.map(p => [p.id,p]));
   let lastSessionPrune = Date.now();
   query.deleteExpired.run(lastSessionPrune);
 
@@ -253,7 +284,42 @@ export function createAccountStore(dbPath) {
     });
   }
 
+  function readFantasy(userId) {
+    const row = fantasyQuery.entry.get(userId,FANTASY_SEASON);
+    const month = transferMonth(fantasyNow());
+    const used = fantasyQuery.used.get(userId,FANTASY_SEASON,month).total;
+    return { playerIds: row ? JSON.parse(row.player_ids) : [], state: row?.state ?? 'draft',
+      submittedAt: row?.submitted_at ?? null, updatedAt: row?.updated_at ?? null, revision: row?.revision ?? 0,
+      activePlayerIds: JSON.parse(fantasyQuery.latest.get(userId,FANTASY_SEASON)?.player_ids ?? '[]'),
+      transfers: { month, used, remaining: Math.max(0,TRANSFERS_PER_MONTH-used), limit: TRANSFERS_PER_MONTH, timeZone:'Europe/Helsinki' } };
+  }
+
+  function writeFantasy(userId, playerIds, revision, submit) {
+    let ids;
+    try { ids=validateRoster(playerIds,fantasyCatalog,submit); } catch(error) { throw failure(400,error.message); }
+    if (!Number.isSafeInteger(revision) || revision<0) throw failure(400,'Reload your fantasy team before saving.');
+    return transaction(() => {
+      requireUser(userId);
+      const current=readFantasy(userId);
+      if (revision!==current.revision) throw failure(409,'Your fantasy team changed in another tab. Reload it before saving.');
+      const timestamp=new Date(fantasyNow()).toISOString();
+      if (submit) {
+        const changes=current.activePlayerIds.length ? ids.filter(id=>!current.activePlayerIds.includes(id)).length : 0;
+        if (changes>current.transfers.remaining) throw failure(409,`You have ${current.transfers.remaining} transfer${current.transfers.remaining===1?'':'s'} left this month. Each player replacement uses one.`);
+        if (!current.activePlayerIds.length || changes) fantasyQuery.lineup.run(userId,FANTASY_SEASON,JSON.stringify(ids),timestamp,current.transfers.month,changes);
+      }
+      fantasyQuery.write.run(userId,FANTASY_SEASON,JSON.stringify(ids),submit?'submitted':current.state,
+        current.submittedAt ?? (submit?timestamp:null),timestamp,current.revision+1);
+      return readFantasy(userId);
+    });
+  }
+
   return {
+    getFantasy(userId) { requireUser(userId); return readFantasy(userId); },
+    saveFantasyDraft(userId,ids,revision) { return writeFantasy(userId,ids,revision,false); },
+    submitFantasy(userId,ids,revision) { return writeFantasy(userId,ids,revision,true); },
+    fantasyHistory(userId) { requireUser(userId); return fantasyQuery.history.all(userId,FANTASY_SEASON).map(r=>({playerIds:JSON.parse(r.player_ids),effectiveAt:r.effective_at})); },
+    listFantasySubmitted() { return fantasyQuery.submitted.all(FANTASY_SEASON).map(r=>({...publicUser(r),submittedAt:r.submitted_at})); },
     async register(username, password) {
       const canonicalName = validateUsername(username);
       validatePassword(password);

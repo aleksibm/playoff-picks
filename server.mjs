@@ -9,8 +9,11 @@ import { TEAMS } from './dist/game.js';
 import { UPDATE_TIME_ZONE, UPDATE_TIME, previousDailyUpdate, createDailyScheduler } from './schedule.mjs';
 import { TARGET_SEASON, fetchStandings, scorePrediction, rankEntries } from './standings.mjs';
 import { hostingConfig, requestContext, createRateLimiter } from './hosting.mjs';
+import { fetchFantasySnapshot, validateFantasySnapshot, scoreFantasyHistory } from './fantasy-scoring.mjs';
+import { FANTASY_SEASON, BUDGET } from './dist/fantasy-rules.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
+const FANTASY_CATALOG = JSON.parse(readFileSync(join(HERE,'fantasy-players.json'),'utf8'));
 const MAX_BODY = 8 * 1024;
 const SESSION_SECONDS = 7 * 24 * 60 * 60;
 const UPDATE_GRACE_MS = 5 * 60 * 1000;
@@ -21,6 +24,12 @@ const STATIC_FILES = new Map([
   ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
   ['/game.js', ['game.js', 'text/javascript; charset=utf-8']],
   ['/icon.svg', ['icon.svg', 'image/svg+xml']],
+  ['/fantasy', ['fantasy.html', 'text/html; charset=utf-8']],
+  ['/fantasy/', ['fantasy.html', 'text/html; charset=utf-8']],
+  ['/fantasy.html', ['fantasy.html', 'text/html; charset=utf-8']],
+  ['/fantasy.css', ['fantasy.css', 'text/css; charset=utf-8']],
+  ['/fantasy.js', ['fantasy.js', 'text/javascript; charset=utf-8']],
+  ['/fantasy-rules.js', ['fantasy-rules.js', 'text/javascript; charset=utf-8']],
   ...TEAMS.map(team => [`/logos/${team.id}.svg`, [`logos/${team.id}.svg`, 'image/svg+xml']]),
 ]);
 
@@ -149,13 +158,44 @@ export function createApp(options = {}) {
     mkdirSync(directory, { recursive: true, mode: 0o700 });
     chmodSync(directory, 0o700);
   }
-  const store = createAccountStore(dbPath);
+  const fantasyCatalog = options.fantasyCatalog ?? FANTASY_CATALOG;
+  const store = createAccountStore(dbPath,{fantasyPlayers:fantasyCatalog.players,now});
+  const fantasyCachePath = options.fantasyCachePath ?? (dbPath === ':memory:' ? null : join(dirname(dbPath),'fantasy-scores.json'));
+  const allowFantasyFetch = options.allowFantasyFetch ?? (options.standingsProvider ? false : options.allowStandingsFetch ?? process.env.PLAYOFF_PICK_FETCH_FANTASY !== '0');
+  const canRefreshFantasy = Boolean(options.fantasyProvider) || allowFantasyFetch;
+  const fantasyProvider = options.fantasyProvider ?? (()=>fetchFantasySnapshot({now:now(),cacheDir:fantasyCachePath?join(dirname(fantasyCachePath),'fantasy-events'):null}));
+  let fantasySnapshot=null,fantasyError=null,fantasyRefreshing=null;
   const startedAt = new Date(now()).toISOString();
   let snapshot = null;
   let refreshError = null;
   let refreshing = null;
   let closed = false;
   const rateLimit = createRateLimiter({ now });
+
+  if(fantasyCachePath&&existsSync(fantasyCachePath)){
+    try{if(statSync(fantasyCachePath).size>16*1024*1024)throw new Error('Oversized fantasy cache');fantasySnapshot=validateFantasySnapshot(JSON.parse(readFileSync(fantasyCachePath,'utf8')));}
+    catch{fantasyError='Saved fantasy scores could not be verified. Awaiting an update.';}
+  }
+
+  function fantasyMetadata(){return {available:Boolean(fantasySnapshot),fetchedAt:fantasySnapshot?.fetchedAt??null,
+    gameCount:fantasySnapshot?.games.length??0,stale:Boolean(fantasySnapshot&&Date.parse(fantasySnapshot.fetchedAt)<previousDailyUpdate(now()-UPDATE_GRACE_MS)),
+    error:fantasyError??(!fantasySnapshot?(canRefreshFantasy?'Fantasy scores are awaiting a verified 2026–27 update.':'Live fantasy updates are disabled in this preview.'):null),
+    modelError:fantasySnapshot?.modelError??null};}
+  function fantasyBody(session){
+    const entry=session?store.getFantasy(session.user.id):null;
+    return {user:session?.user??null,csrfToken:session?.csrfToken??null,entry,
+      score:entry?.submittedAt?scoreFantasyHistory(store.fantasyHistory(session.user.id),fantasySnapshot):{points:null,pending:false,players:{}},scoring:fantasyMetadata(),season:FANTASY_SEASON};
+  }
+  async function refreshFantasy(){
+    if(closed||!canRefreshFantasy)return fantasyMetadata();
+    if(fantasyRefreshing)return fantasyRefreshing;
+    fantasyRefreshing=(async()=>{
+      try{const next=validateFantasySnapshot(await fantasyProvider());if(closed)return fantasyMetadata();if(fantasyCachePath)saveSnapshot(fantasyCachePath,next);fantasySnapshot=next;fantasyError=null;}
+      catch{fantasyError=fantasySnapshot?'Fantasy scores use the last verified update because the latest refresh failed.':'Fantasy statistics could not be verified. Scores will appear after a successful update.';}
+      return fantasyMetadata();
+    })();
+    try{return await fantasyRefreshing;}finally{fantasyRefreshing=null;}
+  }
 
   if (cachePath && existsSync(cachePath)) {
     try {
@@ -218,7 +258,7 @@ export function createApp(options = {}) {
     try { return await refreshing; } finally { refreshing = null; }
   }
 
-  const updateScheduler = createDailyScheduler({ run: refreshStandings, now,
+  const updateScheduler = createDailyScheduler({ run: async()=>{await Promise.allSettled([refreshStandings(),refreshFantasy()]);}, now,
     setTimer: options.setTimer, clearTimer: options.clearTimer });
 
   const server = http.createServer({ maxHeaderSize: 8 * 1024 }, async (request, response) => {
@@ -238,21 +278,41 @@ export function createApp(options = {}) {
       if (path === '/api/session' && request.method === 'GET') {
         return json(response, 200, sessionBody(store.getSession(cookieToken(request, hosting.cookieName))));
       }
-      if ((path === '/api/register' || path === '/api/login') && request.method === 'POST') {
+      if(path==='/api/fantasy/session'&&request.method==='GET')return json(response,200,fantasyBody(store.getSession(cookieToken(request,hosting.cookieName))));
+      if(path==='/api/fantasy/players'&&request.method==='GET'){
+        const totals=new Map(),currentTeams=new Map(),pending=new Set();
+        for(const game of fantasySnapshot?.games??[]){for(const [id,value] of Object.entries(game.scores))totals.set(Number(id),(totals.get(Number(id))??0)+value);for(const [id,team] of Object.entries(game.teams))currentTeams.set(Number(id),team);for(const id of game.pending)pending.add(id);}
+        return json(response,200,{...fantasyCatalog,budget:BUDGET,players:fantasyCatalog.players.map(p=>({...p,team:currentTeams.get(p.id)??p.team,seasonPoints:fantasySnapshot?(totals.get(p.id)??0):null,pending:pending.has(p.id)})),scoring:fantasyMetadata()});
+      }
+      if(path==='/api/fantasy/leaderboard'&&request.method==='GET'){
+        const entries=store.listFantasySubmitted().map(user=>{
+          const history=store.fantasyHistory(user.id);
+          return {...user,playerIds:history.at(-1)?.playerIds??[],...scoreFantasyHistory(history,fantasySnapshot)};
+        }).sort((a,b)=>(b.points??-Infinity)-(a.points??-Infinity)||a.submittedAt.localeCompare(b.submittedAt));
+        let rank=0;entries.forEach((entry,i)=>{if(entry.points!==null&&(i===0||Math.abs(entry.points-entries[i-1].points)>1e-7))rank=i+1;entry.rank=entry.points===null?null:rank;});
+        return json(response,200,{season:FANTASY_SEASON,entries,scoring:fantasyMetadata()});
+      }
+      if((path==='/api/fantasy/roster'&&request.method==='PUT')||(path==='/api/fantasy/submit'&&request.method==='POST')){
+        const session=requireSession(request),body=await readJSON(request);
+        if(path.endsWith('/submit'))store.submitFantasy(session.user.id,body.playerIds,body.revision);
+        else store.saveFantasyDraft(session.user.id,body.playerIds,body.revision);
+        return json(response,200,fantasyBody(session));
+      }
+      if ((['/api/register','/api/login','/api/fantasy/register','/api/fantasy/login'].includes(path)) && request.method === 'POST') {
         rateLimit(`auth:${ip}`, 30);
-        if (path === '/api/register') rateLimit(`register:${ip}`, 8);
+        if (path.endsWith('/register')) rateLimit(`register:${ip}`, 8);
         const body = await readJSON(request);
         const username = typeof body.username === 'string' ? body.username.toLowerCase() : '';
-        if (path === '/api/login') {
+        if (path.endsWith('/login')) {
           rateLimit(`login:${ip}:${username.slice(0, 24)}`, 10);
           rateLimit(`account:${username.slice(0, 24)}`, 20);
         }
-        const session = path === '/api/register' ? await store.register(body.username, body.password)
+        const session = path.endsWith('/register') ? await store.register(body.username, body.password)
           : await store.login(body.username, body.password);
         // Rotate away a prior session when switching or signing in again.
         store.logout(cookieToken(request, hosting.cookieName));
         setSessionCookie(response, session.token, hosting);
-        return json(response, 200, sessionBody(session));
+        return json(response, 200, path.startsWith('/api/fantasy/')?fantasyBody(session):sessionBody(session));
       }
       if (path === '/api/logout' && request.method === 'POST') {
         requireSession(request);
@@ -318,10 +378,11 @@ export function createApp(options = {}) {
   server.maxRequestsPerSocket = 100;
   if (hosting.secure) server.maxConnections = 256;
   server.on('listening', () => {
-    if (canRefresh) {
+    if (canRefresh || canRefreshFantasy) {
       updateScheduler.start();
       // Restore missed noon updates after downtime, while reusing a current cache.
       if (!snapshot || Date.parse(snapshot.fetchedAt) < previousDailyUpdate(now())) void refreshStandings();
+      if(!fantasySnapshot||Date.parse(fantasySnapshot.fetchedAt)<previousDailyUpdate(now()))void refreshFantasy();
     }
   });
 
@@ -366,10 +427,11 @@ export function createApp(options = {}) {
       await new Promise((resolveClose, rejectClose) => server.close(error => error ? rejectClose(error) : resolveClose()));
     }
     if (refreshing) await refreshing;
+    if (fantasyRefreshing) await fantasyRefreshing;
     store.close();
   }
 
-  return { server, close, refreshStandings, startAdmin: port => admin.start(port), publicOrigin: hosting.publicOrigin };
+  return { server, close, refreshStandings, refreshFantasy, startAdmin: port => admin.start(port), publicOrigin: hosting.publicOrigin };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {

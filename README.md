@@ -1,6 +1,6 @@
 # The Playoff Pick
 
-An NHL playoff prediction game with accounts, locked predictions, and a live season leaderboard. It runs locally by default and supports public HTTPS hosting behind a reverse proxy.
+Two independent NHL games with a shared account: Playoff Pick predictions and a six-player Fantasy competition. Each game has its own entries, points and leaderboard. The app runs locally by default and supports public HTTPS hosting behind a reverse proxy.
 
 For your Linux hosting laptop and **picks.aleksi.net through Cloudflare Tunnel**, follow **[HOSTING.md](HOSTING.md)**. The security review and its verification limits are in **[SECURITY-REVIEW.md](SECURITY-REVIEW.md)**. Transfer the prepared source ZIP; keep private account data separate.
 
@@ -24,7 +24,30 @@ Opening an HTML file directly cannot provide account storage or the shared leade
 - Each account has one leaderboard entry for the 2026–27 season.
 - Logging out does not remove the account or its prediction.
 
-## Scores
+## Fantasy at `/fantasy`
+
+- Choose **1 goalie, 2 defensemen and 3 attackers**, within **US$40 million**. Attackers can be centers or either wing. There are no mandatory price tiers.
+- Prices are fixed from the agreed 2025–26 backtest, at US$16,092.626542642727 per fantasy point. The shipped catalog has 1,016 players with positive, verified valuations; rookies and players without a usable valuation are not selectable in this edition. Prices do not update with current-season points.
+- Drafts save to the account. Entering the first team uses no transfers. After entry, **each replacement costs one of two transfers per Helsinki calendar month**. Unused transfers expire; the next month always starts with two. The server validates the budget, position counts, monthly limit and revision atomically.
+- Fantasy uses the existing account and cookie, but stores independent draft, active lineup and lineup history records. Entering Fantasy does not enter or unlock Playoff Pick. The Fantasy leaderboard displays submitted managers and active rosters independently.
+- Only **completed 2026–27 regular-season games that start after entry** score. Transfers apply to games starting after confirmation. Previously earned points remain with the team, including contributions by transferred-out players. Game start and transfer timestamps are compared as instants, including milliseconds.
+- The half-rink team sheet puts attackers across the front, defensemen behind them, and the goalie in the crease. The market supports search, position and budget filters, and price/current-points sorting.
+
+### Fantasy scoring
+
+Non-power-play goals earn 5 and assists 10/3. Power-play goals and assists earn two-thirds of those values. A game-winning goal earns 6.25 total goal points in any situation. Defensemen receive 1.5 times goal and assist points, including the game-winner award. All other categories have the same value for every skater: faceoffs +1 won/−1 lost; shots, hits, blocks and takeaways +0.25 each; giveaways zero; and team wins +5 for players who appeared.
+
+Each 2-minute minor or 4-minute double minor deducts 5/3; a 5-minute major deducts 10/3; misconducts and match ejections deduct 5. Separate penalties stack. Unassigned team or coach penalties are not charged to a player serving a bench penalty.
+
+Goalies earn 0.625 per save and lose 3.75 per goal conceded. An official individual shutout multiplies that game's save points by 1.5. Goals saved above expected (GSAx) add or deduct 5 per expected goal prevented. Goalies also receive forward-rate goals/assists, the same penalty deductions, and +5 for appearing in a team win, including relief appearances. Shootout attempts do not score.
+
+Fantasy statistics are fetched **once daily at 12:00 Europe/Helsinki**, alongside the independent standings refresh, with startup catch-up after downtime. Browser requests read the cached snapshot and do not fetch upstream statistics. The Fantasy page refreshes its displayed statistics once per day, or when the user explicitly refreshes the table. Page refreshes never change fixed prices.
+
+Sources are official NHL per-game reports and event feeds, plus [MoneyPuck.com's published goalie game data](https://moneypuck.com/data.htm). MoneyPuck data is used with attribution for this noncommercial game. Missing model data is explicitly marked provisional in player totals, team scores and the leaderboard. Unverified feeds never replace a verified snapshot. NHL event manpower placeholders are reconciled with official per-game power-play totals.
+
+Fantasy adds SQLite schema version 3 while preserving existing accounts, sessions and prediction records. Back up the private data directory before deploying. The new backend is required: deploying `dist/` alone cannot save teams or enforce transfers. Optional setting: `PLAYOFF_PICK_FETCH_FANTASY=0` disables upstream Fantasy updates for isolated previews.
+
+## Playoff Pick scores
 
 The leaderboard sums the official NHL **regular-season standings points** of the 16 selected teams. Full-season totals are used, including games before a prediction was submitted. Scores use the NHL's actual points field, including any rule-specific adjustments, rather than goals scored or playoff results.
 
