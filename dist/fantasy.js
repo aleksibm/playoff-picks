@@ -4,6 +4,7 @@ const $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let catalog=[],byId=new Map(),draft=[],session={user:null,entry:null,score:{points:null},csrfToken:null},loaded=false,busy=false,role='all',replacing=null,limit=12,authMode='login',confirmation=null,toastTimer,league=[];
 let feed=null,marketError=null,authGeneration=0,priceMarket=null;
+let gameLogContext=null,gameLogRequest=0;
 const same=(a,b)=>a.length===b.length&&a.every(id=>b.includes(id));
 const active=()=>session.entry?.activePlayerIds??[];
 const funds=()=>active().length?(session.entry.cashBalance??0)+active().reduce((n,id)=>n+(byId.get(id)?.price??0),0):BUDGET;
@@ -43,7 +44,7 @@ function renderMarket(){
     const selected=draft.includes(p.id),valid=progressFor([...draft.filter(x=>x!==replacing),p.id]).valid;
     const disabled=busy||(!selected&&!valid);
     const why=selected?'Remove':p.price>available?'Over budget:':'Position full:';
-    return `<div class="player-row${selected?' selected':''}"><div class="player-identity"><span class="player-avatar" aria-hidden="true">${esc(initials(p.name))}</span><div><strong>${esc(p.name)}</strong><small>${esc(p.team)} · ${esc(p.position)} · ${p.games} GP</small></div></div><span class="player-stat" title="${sort==='current'?'2026–27':'2025–26'} fantasy points${sort==='current'&&p.pending?' · Provisional GSAx':''}">${points(sort==='current'?p.seasonPoints:p.lastPoints)}${sort==='current'&&p.pending?'*':''}</span><span class="player-price">${money(p.price)}</span><button class="add-player" type="button" data-player="${p.id}" aria-pressed="${selected}" aria-label="${selected?'Remove':valid?'Add':why} ${esc(p.name)}${replacing&&!selected?' as replacement':''}" title="${selected?'Remove player':valid?'Add player':p.price>available?'Over budget':'Replace a player in this position first'}"${disabled?' disabled':''}>${selected?'✓':'+'}</button></div>`;
+    return `<div class="player-row${selected?' selected':''}"><div class="player-identity"><span class="player-avatar" aria-hidden="true">${esc(initials(p.name))}</span><div><button type="button" class="player-game-link" data-games="${p.id}" aria-label="View game-by-game points for ${esc(p.name)}"><strong>${esc(p.name)}</strong><span class="game-log-hint">Game log ↗</span></button><small>${esc(p.team)} · ${esc(p.position)} · ${p.games} GP</small></div></div><span class="player-stat" title="${sort==='current'?'2026–27':'2025–26'} fantasy points${sort==='current'&&p.pending?' · Provisional GSAx':''}">${points(sort==='current'?p.seasonPoints:p.lastPoints)}${sort==='current'&&p.pending?'*':''}</span><span class="player-price">${money(p.price)}</span><button class="add-player" type="button" data-player="${p.id}" aria-pressed="${selected}" aria-label="${selected?'Remove':valid?'Add':why} ${esc(p.name)}${replacing&&!selected?' as replacement':''}" title="${selected?'Remove player':valid?'Add player':p.price>available?'Over budget':'Replace a player in this position first'}"${disabled?' disabled':''}>${selected?'✓':'+'}</button></div>`;
   }).join('')||`<p class="market-empty">${marketError?'The player market could not be loaded. Reload the page to retry.':'No players match. Try another search or turn off “Within budget”.'}</p>`;
   $('load-more').hidden=filtered.length<=limit;$('load-more').disabled=busy;
   $('replacement-note').hidden=!replacing;
@@ -58,7 +59,7 @@ function renderRoster(){
   pools.F=attackers;
   $('roster-slots').innerHTML=SLOTS.map(slot=>{
     const p=pools[slot.role].shift();
-    return `<div class="roster-slot"><div class="slot-role">${slot.role==='F'?'ATTACK':slot.role==='D'?'DEFENSE':'GOALIE'}</div><button type="button" class="slot-main${p?' filled':''}${p?.id===replacing?' replacing':''}" ${p?`data-replace="${p.id}"`:`data-empty-role="${slot.role}"`} aria-label="${p?`Replace ${esc(p.name)}`:`Choose ${slot.label.toLowerCase()}`}"${busy?' disabled':''}>${p?`<span aria-hidden="true">${esc(p.team)}</span><strong>${esc(p.name)}</strong><small>${money(p.price)}</small>`:`<span class="slot-plus" aria-hidden="true">+</span><strong>${slot.label}</strong><small>CHOOSE PLAYER</small>`}</button>${p?`<button class="slot-remove" type="button" data-remove="${p.id}" aria-label="Remove ${esc(p.name)}"${busy?' disabled':''}>×</button>`:''}</div>`;
+    return `<div class="roster-slot"><div class="slot-role">${slot.role==='F'?'ATTACK':slot.role==='D'?'DEFENSE':'GOALIE'}</div><button type="button" class="slot-main${p?' filled':''}${p?.id===replacing?' replacing':''}" ${p?`data-replace="${p.id}"`:`data-empty-role="${slot.role}"`} aria-label="${p?`Replace ${esc(p.name)}`:`Choose ${slot.label.toLowerCase()}`}"${busy?' disabled':''}>${p?`<span aria-hidden="true">${esc(p.team)}</span><strong>${esc(p.name)}</strong><small>${money(p.price)}</small>`:`<span class="slot-plus" aria-hidden="true">+</span><strong>${slot.label}</strong><small>CHOOSE PLAYER</small>`}</button>${p?`<button class="slot-remove" type="button" data-remove="${p.id}" aria-label="Remove ${esc(p.name)}"${busy?' disabled':''}>×</button><button type="button" class="slot-game-link" data-games="${p.id}" aria-label="View game-by-game points for ${esc(p.name)}">Game log</button>`:''}</div>`;
   }).join('');
   $('budget-left').textContent=money(progress.remaining);$('budget-spent').textContent=`${money(progress.cost)} team value`;
   $('portfolio-value').textContent=`Team + cash: ${money(funds())}${active().length&&!same(draft,active())?' · Cash shown after planned sales and purchases.':''}`;
@@ -79,9 +80,76 @@ function renderRoster(){
   $('submit-roster').textContent=entered?changes()?`Confirm ${changes()} transfer${changes()===1?'':'s'} ↗`:'Team entered ✓':session.user?'Enter competition ↗':'Sign in to enter ↗';
   $('reload-team').disabled=busy||!session.user;
   $('own-fantasy-points').textContent=points(session.score?.points);
+  $('view-contributions').hidden=!entered;
   $('own-score-note').textContent=!entered?'Your points start with games beginning after you enter.':session.score?.pending?'Provisional total. A goals-saved-above-expected adjustment is pending.':session.score?.points===null?'Awaiting verified NHL statistics. Your entry is saved.':'Includes points earned by every lineup you have fielded, including players you transferred out.';
 }
+function scoreStatus(metadata){
+  const updated=metadata?.fetchedAt?new Date(metadata.fetchedAt).toLocaleString('en-GB',{timeZone:'Europe/Helsinki',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):null;
+  return [metadata?.error,metadata?.stale?'Update overdue; showing the last verified scores.':null,updated?`Updated ${updated} Helsinki time.`:null,'* Provisional: a GSAx adjustment is pending.'].filter(Boolean).join(' ');
+}
+function gameDate(game){
+  const date=new Date(/^\d{4}-\d{2}-\d{2}$/.test(game.date??'')?`${game.date}T12:00:00Z`:game.startTime);
+  return Number.isFinite(date.getTime())?date.toLocaleDateString('en-GB',{timeZone:'UTC',day:'numeric',month:'short'}):'Date unavailable';
+}
+function gameMatchup(game){
+  if(game.opponent)return `${game.team??''} ${game.homeAway==='away'?'@':game.homeAway==='home'?'vs':'·'} ${game.opponent}`.trim();
+  return game.team?`${game.team} · Opponent unavailable`:`Game ${game.gameId}`;
+}
+function gameRows(games,{earnedGames=null}={}){
+  const earned=earnedGames===null?null:new Set(earnedGames.map(game=>game.gameId));
+  return `<div class="points-table-wrap"><table class="player-points-table"><caption class="sr-only">Game-by-game fantasy points. Dates follow the NHL game date.</caption><thead><tr><th scope="col">DATE</th><th scope="col">MATCHUP</th><th scope="col">FANTASY PTS</th>${earned?'<th scope="col">FOR YOU</th>':''}</tr></thead><tbody>${games.map(game=>`<tr><td><time datetime="${esc(game.startTime)}">${esc(gameDate(game))}</time></td><td>${esc(gameMatchup(game))}</td><td class="${game.points<0?'negative-points':''}"${game.pending?' title="Provisional: GSAx adjustment pending"':''}>${points(game.points)}${game.pending?'*':''}</td>${earned?`<td${earned.has(game.gameId)&&game.points<0?' class="negative-points"':''}>${earned.has(game.gameId)?`${points(game.points)}${game.pending?'*':''}`:'<span class="unearned-points" title="This game did not count for your team">—</span>'}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
+}
+function renderContributions(){
+  const section=$('fantasy-contributions'),list=$('contribution-list');
+  section.hidden=!session.user||!session.entry?.submittedAt;
+  if(section.hidden){list.innerHTML='';$('contribution-total').textContent='—';$('contribution-status').textContent='';return;}
+  const opened=new Set([...list.querySelectorAll('details[open]')].map(detail=>detail.dataset.contribution));
+  const score=session.score??{},ids=[...new Set([...active(),...Object.keys(score.players??{}).map(Number)])];
+  $('contribution-total').textContent=`${points(score.points)}${score.pending?'*':''}`;
+  const totalsAvailable=score.points!==null&&score.points!==undefined;
+  ids.sort((a,b)=>(score.players?.[b]??0)-(score.players?.[a]??0)||(byId.get(a)?.name??'').localeCompare(byId.get(b)?.name??''));
+  list.innerHTML=ids.map(id=>{
+    const player=byId.get(id),games=score.playerGames?.[id]??[],total=totalsAvailable?(score.players?.[id]??0):null;
+    const pending=games.some(game=>game.pending),current=active().includes(id);
+    return `<details class="player-contribution" data-contribution="${id}"${opened.has(String(id))?' open':''}><summary><span class="contribution-player"><strong>${esc(player?.name??'Player unavailable')}</strong><small>${esc(player?.position??'')} <span class="contribution-roster-state${current?' current':''}">${current?'Current team':'Transferred out'}</span></small></span><span class="contribution-value${total<0?' negative-points':''}"><strong>${points(total)}${pending?'*':''}</strong><small>${games.length} counted ${games.length===1?'game':'games'}</small></span><span class="contribution-chevron" aria-hidden="true">＋</span></summary><div class="contribution-games">${games.length?gameRows(games):`<p class="points-empty">${totalsAvailable?'No completed appearances have counted for your team yet.':'Awaiting verified NHL statistics. Your confirmed lineup is saved.'}</p>`}<button type="button" class="text-button contribution-game-link" data-games="${id}">View all season games ↗</button></div></details>`;
+  }).join('')||'<p class="points-empty">Your player contributions will appear after a completed game is scored.</p>';
+  $('contribution-status').textContent=scoreStatus(feed);
+}
+function closeGameLog(){
+  gameLogRequest++;gameLogContext=null;
+  if($('player-games-dialog').open)$('player-games-dialog').close();
+  $('player-games-summary').innerHTML='';$('player-games-content').innerHTML='';$('player-games-status').textContent='';
+  $('player-games-content').setAttribute('aria-busy','false');
+}
+async function openGameLog(id){
+  const player=byId.get(id);if(!player)return;
+  const request=++gameLogRequest,generation=authGeneration,userId=session.user?.id;
+  gameLogContext={id,request,generation,userId};
+  $('player-games-title').textContent=player.name;
+  $('player-games-description').textContent=`${player.team} · ${player.position} · Fantasy points from every completed 2026–27 regular-season appearance.`;
+  $('player-games-summary').innerHTML='';$('player-games-content').innerHTML='<p class="points-empty">Loading game-by-game points…</p>';
+  $('player-games-content').setAttribute('aria-busy','true');$('player-games-status').textContent='';
+  if(!$('player-games-dialog').open)$('player-games-dialog').showModal();
+  try{
+    const data=await api(`/api/fantasy/players/${id}/games`);
+    if(request!==gameLogRequest||generation!==authGeneration||userId!==session.user?.id||!$('player-games-dialog').open)return;
+    if(session.user&&session.entry?.submittedAt&&session.scoring?.fetchedAt!==data.scoring?.fetchedAt)await personal({replace:false});
+    if(request!==gameLogRequest||generation!==authGeneration||userId!==session.user?.id||!$('player-games-dialog').open)return;
+    const games=data.games??[],hasTeam=Boolean(session.user&&session.entry?.submittedAt),ownScoresCurrent=hasTeam&&session.scoring?.fetchedAt===data.scoring?.fetchedAt;
+    const earned=ownScoresCurrent?session.score?.playerGames?.[id]??[]:null;
+    const earnedTotal=ownScoresCurrent&&Number.isFinite(session.score?.points)?(session.score?.players?.[id]??0):null;
+    $('player-games-summary').innerHTML=`<div><span>SEASON FANTASY POINTS</span><strong>${points(data.seasonPoints)}${games.some(game=>game.pending)?'*':''}</strong></div>${hasTeam?`<div><span>EARNED FOR YOUR TEAM</span><strong class="${earnedTotal<0?'negative-points':''}">${points(earnedTotal)}${earned?.some(game=>game.pending)?'*':''}</strong></div>`:''}`;
+    const explanation=ownScoresCurrent?'<p class="game-log-explanation">“For you” includes only games that began while this player was in your confirmed lineup. A dash means the game did not count for your team.</p>':hasTeam?'<p class="game-log-explanation">Your team’s contribution totals are updating. Reopen this log in a moment to compare the points earned for your team.</p>':'';
+    $('player-games-content').innerHTML=games.length?`${explanation}${gameRows(games,{earnedGames:earned})}`:`<p class="points-empty">${data.scoring?.available?'No completed appearances are recorded for this player yet.':'Game-by-game points are awaiting verified NHL statistics.'}</p>`;
+    $('player-games-status').textContent=scoreStatus(data.scoring);
+  }catch(error){
+    if(request!==gameLogRequest||generation!==authGeneration||userId!==session.user?.id)return;
+    $('player-games-content').innerHTML='<p class="points-empty">The player’s game log could not be loaded. Close this window and try again.</p>';
+    $('player-games-status').textContent=error.message;
+  }finally{if(request===gameLogRequest)$('player-games-content').setAttribute('aria-busy','false');}
+}
 function render(){
+  if(gameLogContext&&(gameLogContext.generation!==authGeneration||gameLogContext.userId!==session.user?.id))closeGameLog();
   const showPicker=Boolean(session.user);
   document.querySelector('.fantasy-section-nav a').setAttribute('href',showPicker?'#market':'#fantasy-guest');
   $('fantasy-picker').hidden=!showPicker;$('fantasy-guest').hidden=showPicker;$('choose-players').disabled=busy||!loaded;
@@ -89,7 +157,7 @@ function render(){
   $('fantasy-auth').innerHTML=session.user?`<span title="${esc(session.user.displayName)}">${esc(session.user.displayName)}</span><button class="login-button" id="fantasy-logout" type="button"${busy?' disabled':''}>Log out</button>`:`<button class="login-button" id="login" type="button"${busy?' disabled':''}>Log in</button>`;
   $('fantasy-message').textContent=marketError??(session.user?`${session.user.displayName}, this is your Fantasy desk. ${dirty()?'Your latest changes are not saved yet.':'Your saved roster is connected to your account.'}`:'Create an account or log in to choose your players and enter Fantasy.');
   $('fantasy-message').classList.toggle('error',Boolean(marketError));
-  renderRoster();renderMarket();if(!session.entry?.submittedAt)renderLeague();
+  renderRoster();renderMarket();renderContributions();if(!session.entry?.submittedAt)renderLeague();
 }
 function openAuth(mode='login'){
   if(busy)return;
@@ -104,7 +172,7 @@ async function personal({replace=true}={}){
   if(generation!==authGeneration)return;
   if(!replace&&session.user?.id===next.user?.id&&dirty()){
     if(next.entry&&session.entry&&next.entry.revision===session.entry.revision)session.entry.transfers=next.entry.transfers;
-    session.score=next.score;render();return;
+    session.score=next.score;session.scoring=next.scoring;feed=next.scoring;render();return;
   }
   const changedAccount=next.user?.id!==session.user?.id;
   if(changedAccount){authGeneration++;league=[];}
@@ -166,8 +234,9 @@ async function refreshLeague(updateMarket=true){
   finally{$('refresh-fantasy').disabled=false;}
 }
 
-$('player-list').addEventListener('click',e=>{const b=e.target.closest('[data-player]');if(b)choosePlayer(Number(b.dataset.player));});
+$('player-list').addEventListener('click',e=>{const log=e.target.closest('[data-games]');if(log){void openGameLog(Number(log.dataset.games));return;}const b=e.target.closest('[data-player]');if(b)choosePlayer(Number(b.dataset.player));});
 $('roster-slots').addEventListener('click',e=>{
+  const log=e.target.closest('[data-games]');if(log){void openGameLog(Number(log.dataset.games));return;}
   const remove=e.target.closest('[data-remove]');if(remove){choosePlayer(Number(remove.dataset.remove));return;}
   const replace=e.target.closest('[data-replace]'),empty=e.target.closest('[data-empty-role]');
   if(replace){replacing=Number(replace.dataset.replace);role=playerRole(byId.get(replacing));}
@@ -219,6 +288,8 @@ function receiveMarket(data){catalog=data.players;byId=new Map(catalog.map(p=>[p
 async function loadMarket(){receiveMarket(await api('/api/fantasy/players'));render();}
 void boot();
 $('fantasy-auth-dialog').addEventListener('close',()=>{$('fantasy-password').value='';$('fantasy-password-confirm').value='';$('fantasy-auth-error').textContent='';});
+$('contribution-list').addEventListener('click',e=>{const button=e.target.closest('[data-games]');if(button)void openGameLog(Number(button.dataset.games));});
+$('player-games-dialog').addEventListener('close',()=>{if(!$('player-games-dialog').open)closeGameLog();});
 // Statistics are a daily snapshot. Read it once a day rather than polling.
 setInterval(()=>{if(!document.hidden&&!busy){void refreshLeague();void personal({replace:false}).catch(()=>{});}},24*60*60*1000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&loaded&&!busy)void loadMarket().then(()=>personal({replace:false})).catch(()=>{});});

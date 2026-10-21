@@ -131,7 +131,7 @@ export function scoreGame({pbp,skaters,goalies,realtime,faceoffs,model}) {
     scores[r.playerId]=saves-count(r.goalsAgainst,'goals conceded')*3.75+(gsax?.gsax??0)*5+win+(offense.get(r.playerId)??0)+(penalties.get(r.playerId)??0);
     teams[r.playerId]=r.teamAbbrev;
   }
-  return {id:pbp.id,startTime:pbp.startTimeUTC,date:pbp.gameDate,scores,pending,teams};
+  return {id:pbp.id,startTime:pbp.startTimeUTC,date:pbp.gameDate,homeTeam:home.abbrev??null,awayTeam:away.abbrev??null,scores,pending,teams};
 }
 
 export function validateFantasySnapshot(snapshot) {
@@ -142,22 +142,43 @@ export function validateFantasySnapshot(snapshot) {
     seen.add(g.id);
     if(Object.values(g.scores).some(x=>!Number.isFinite(x)||Math.abs(x)>1000))throw new Error('Invalid fantasy score.');
     if(g.pending.some(id=>!Number.isSafeInteger(id)||!Object.hasOwn(g.scores,id)))throw new Error('Invalid pending score.');
+    if([g.homeTeam,g.awayTeam].some(team=>team!=null&&(typeof team!=='string'||!/^[A-Z]{2,4}$/.test(team))))throw new Error('Invalid fantasy matchup.');
   }
   return snapshot;
 }
 
-export function scoreFantasyHistory(history,snapshot) {
-  if(!snapshot)return {points:null,pending:false,players:{}};
+function playerGame(g,id){
+  const team=g.teams?.[id]??null;
+  const homeAway=team&&team===g.homeTeam?'home':team&&team===g.awayTeam?'away':null;
+  const opponents=[...new Set(Object.values(g.teams??{}))].filter(value=>value!==team);
+  const opponent=homeAway==='home'?g.awayTeam:homeAway==='away'?g.homeTeam:team&&opponents.length===1?opponents[0]:null;
+  return {gameId:g.id,startTime:g.startTime,date:g.date??g.startTime.slice(0,10),team,opponent:opponent??null,homeAway,
+    points:g.scores[id],pending:g.pending.includes(id)};
+}
+
+/** All completed appearances, regardless of whether a manager owned the player. */
+export function playerGameLogs(snapshot,playerId){
+  if(!snapshot)return [];
+  return snapshot.games.filter(g=>Object.hasOwn(g.scores,playerId)).map(g=>playerGame(g,playerId))
+    .sort((a,b)=>Date.parse(b.startTime)-Date.parse(a.startTime)||b.gameId-a.gameId);
+}
+
+export function scoreFantasyHistory(history,snapshot,{includeGameLogs=true}={}) {
+  if(!snapshot)return {points:null,pending:false,players:{},playerGames:{}};
   const sorted=history.map(h=>({...h,at:Date.parse(h.effectiveAt)})).sort((a,b)=>a.at-b.at);
-  const players={};let total=0,pending=false;
+  const players={},playerGames={};let total=0,pending=false;
   for(const g of snapshot.games){
     const startedAt=Date.parse(g.startTime);
     let lineup=null;
     for(const h of sorted){if(h.at>startedAt)break;lineup=h;}
     if(!lineup)continue;
-    for(const id of lineup.playerIds){const value=g.scores[id]??0;total+=value;players[id]=(players[id]??0)+value;if(g.pending.includes(id))pending=true;}
+    for(const id of lineup.playerIds){
+      const value=g.scores[id]??0;total+=value;players[id]=(players[id]??0)+value;if(g.pending.includes(id))pending=true;
+      if(includeGameLogs&&Object.hasOwn(g.scores,id))(playerGames[id]??=[]).push(playerGame(g,id));
+    }
   }
-  return {points:total,pending,players};
+  for(const games of Object.values(playerGames))games.sort((a,b)=>Date.parse(b.startTime)-Date.parse(a.startTime)||b.gameId-a.gameId);
+  return {points:total,pending,players,playerGames};
 }
 
 async function mapLimit(items,limit,fn){

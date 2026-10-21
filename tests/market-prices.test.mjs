@@ -1,11 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { initialMarket, updateWeeklyPrices, validateMarket, previousPriceUpdate, nextPriceUpdate } from '../market-prices.mjs';
+import { applyMinimumPrice, priceVersion, initialMarket, updateWeeklyPrices, validateMarket, previousPriceUpdate, nextPriceUpdate } from '../market-prices.mjs';
 import { createAccountStore } from '../accounts.mjs';
+import { createApp } from '../server.mjs';
 const players=[
   {id:1,name:'Rising Center',position:'C',team:'COL',price:12_000_000,lastPoints:1200,games:82},
   {id:2,name:'Wing',position:'RW',team:'TBL',price:12_000_000,lastPoints:1200,games:82},
@@ -19,6 +20,47 @@ const catalog={season:'20262027',usdPerPoint:10000,players};
 const lineup=[1,2,3,4,5,6];
 const monday=Date.parse('2026-10-19T09:00:00Z');
 function stats(scores,pending=[]){return {season:'20262027',fetchedAt:new Date(monday).toISOString(),games:Array.from({length:5},(_,i)=>({startTime:`2026-10-${String(10+i).padStart(2,'0')}T20:00:00Z`,scores,pending}))};}
+
+test('new and verified existing markets floor player prices at $100,000 and invalidate old quotes',()=>{
+  const cheapCatalog={...catalog,players:players.map(p=>({...p,price:p.id===3?40_000:p.price}))};
+  const initial=initialMarket(cheapCatalog);
+  assert.equal(initial.prices[3],100_000);
+  const snapshot={...initial,prices:{...initial.prices,3:40_000}};
+  snapshot.version=priceVersion(snapshot);
+  const migrated=applyMinimumPrice(validateMarket(cheapCatalog,snapshot));
+  assert.equal(migrated.prices[3],100_000);assert.equal(migrated.prices[1],snapshot.prices[1]);
+  assert.equal(migrated.asOf,snapshot.asOf);assert.notEqual(migrated.version,snapshot.version);
+  assert.equal(validateMarket(cheapCatalog,migrated),migrated);assert.equal(applyMinimumPrice(migrated),migrated);
+  assert.equal(updateWeeklyPrices(cheapCatalog,snapshot,null,monday).prices[3],100_000);
+  assert.throws(()=>validateMarket(cheapCatalog,{...snapshot,prices:{...snapshot.prices,3:1}}));
+});
+
+test('weekly decreases stop at $100,000 while increases still respect the 5% cap',()=>{
+  const cheapCatalog={...catalog,players:players.map(p=>p.id===3?{...p,price:102_000,lastPoints:1}:p)};
+  const base=initialMarket(cheapCatalog),next=updateWeeklyPrices(cheapCatalog,base,stats({3:-10}),monday);
+  assert.equal(next.prices[3],100_000);
+  const following=Date.parse('2026-10-26T10:00:00Z');
+  assert.equal(updateWeeklyPrices(cheapCatalog,next,{...stats({3:-10}),fetchedAt:new Date(following).toISOString()},following).prices[3],100_000);
+  assert.equal(updateWeeklyPrices(cheapCatalog,next,{...stats({3:100}),fetchedAt:new Date(following).toISOString()},following).prices[3],105_000);
+});
+
+test('startup persists the floor for verified saved prices and both public markets use it',async t=>{
+  const directory=mkdtempSync(join(tmpdir(),'fantasy-floor-')),marketCachePath=join(directory,'market-prices.json');
+  t.after(()=>rmSync(directory,{recursive:true,force:true}));
+  const snapshot={...initialMarket(catalog),asOf:new Date(monday).toISOString(),prices:Object.fromEntries(players.map(p=>[p.id,p.id===3?40_000:p.price]))};
+  snapshot.version=priceVersion(snapshot);writeFileSync(marketCachePath,JSON.stringify(snapshot));
+  const app=createApp({dbPath:':memory:',fantasyCatalog:catalog,marketCachePath,now:()=>monday,allowStandingsFetch:false,allowFantasyFetch:false,allowContractFetch:false});
+  t.after(()=>app.close());
+  await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
+  const url=`http://127.0.0.1:${app.server.address().port}`;
+  const picker=await (await fetch(url+'/api/fantasy/players')).json();
+  const values=await (await fetch(url+'/api/fantasy/value')).json();
+  const saved=validateMarket(catalog,JSON.parse(readFileSync(marketCachePath,'utf8')));
+  assert.equal(picker.players.find(p=>p.id===3).price,100_000);
+  assert.equal(values.players.find(p=>p.id===3).fantasyValue,100_000);
+  assert.equal(picker.market.minimumPrice,100_000);assert.equal(saved.prices[3],100_000);
+  assert.notEqual(saved.version,snapshot.version);assert.equal(picker.market.version,saved.version);
+});
 test('weekly prices blend 75/25, cap both directions at 5% and apply only once per Monday',()=>{
   const base=initialMarket(catalog),next=updateWeeklyPrices(catalog,base,stats({1:100,2:-10,3:2,6:20}),monday);
   assert.equal(next.prices[1],12_600_000);assert.equal(next.prices[2],11_400_000);
