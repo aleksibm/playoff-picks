@@ -22,7 +22,7 @@ Transfer and extract the source ZIP into a temporary folder on the laptop. From 
 sudo useradd --system --user-group --home-dir /var/lib/playoff-picks --shell /usr/sbin/nologin playoff-pick
 sudo install -d -m 0755 /opt/playoff-picks
 sudo cp -R dist deployment tests /opt/playoff-picks/
-sudo cp server.mjs accounts.mjs admin.mjs hosting.mjs schedule.mjs standings.mjs fantasy-scoring.mjs fantasy-players.json player-contracts.json player-values.mjs contract-updates.mjs market-prices.mjs package.json README.md HOSTING.md SECURITY-REVIEW.md /opt/playoff-picks/
+sudo cp server.mjs accounts.mjs admin.mjs hosting.mjs schedule.mjs standings.mjs fantasy-scoring.mjs fantasy-players.json roster-updates.mjs refresh-roster.mjs fantasy-roster.json player-contracts.json player-values.mjs contract-updates.mjs market-prices.mjs package.json README.md HOSTING.md SECURITY-REVIEW.md /opt/playoff-picks/
 sudo chown -R root:root /opt/playoff-picks
 sudo find /opt/playoff-picks -type d -exec chmod 0755 {} +
 sudo find /opt/playoff-picks -type f -exec chmod 0644 {} +
@@ -197,7 +197,7 @@ sudo cp -a /opt/playoff-picks "$task_code_backup"
 
 sudo systemctl stop playoff-picks
 sudo cp -R dist deployment tests /opt/playoff-picks/
-sudo cp ./*.mjs fantasy-players.json player-contracts.json package.json README.md HOSTING.md SECURITY-REVIEW.md /opt/playoff-picks/
+sudo cp ./*.mjs fantasy-players.json fantasy-roster.json player-contracts.json package.json README.md HOSTING.md SECURITY-REVIEW.md /opt/playoff-picks/
 sudo chown -R root:root /opt/playoff-picks
 sudo find /opt/playoff-picks -type d -exec chmod 0755 {} +
 sudo find /opt/playoff-picks -type f -exec chmod 0644 {} +

@@ -9,14 +9,16 @@ import { TEAMS } from './dist/game.js';
 import { UPDATE_TIME_ZONE, UPDATE_TIME, previousDailyUpdate, createDailyScheduler } from './schedule.mjs';
 import { TARGET_SEASON, fetchStandings, scorePrediction, rankEntries } from './standings.mjs';
 import { hostingConfig, requestContext, createRateLimiter } from './hosting.mjs';
-import { fetchFantasySnapshot, validateFantasySnapshot, scoreFantasyHistory, playerGameLogs } from './fantasy-scoring.mjs';
+import { fetchFantasySnapshot, validateFantasySnapshot, scoreFantasyHistory, playerGameLogs, weeklyTopPlayers } from './fantasy-scoring.mjs';
 import { FANTASY_SEASON, BUDGET } from './dist/fantasy-rules.js';
 import { buildPlayerValues } from './player-values.mjs';
 import { createContractUpdater, fetchContractSnapshot } from './contract-updates.mjs';
-import { MINIMUM_PLAYER_PRICE, applyMinimumPrice, initialMarket, validateMarket, pricedPlayers, updateWeeklyPrices, previousPriceUpdate, nextPriceUpdate } from './market-prices.mjs';
+import { MINIMUM_PLAYER_PRICE, applyMinimumPrice, initialMarket, reconcileMarket, pricedPlayers, updateWeeklyPrices, previousPriceUpdate, nextPriceUpdate } from './market-prices.mjs';
+import { fetchRosterSnapshot, validateRosterSnapshot, mergeRosterCatalog } from './roster-updates.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FANTASY_CATALOG = JSON.parse(readFileSync(join(HERE,'fantasy-players.json'),'utf8'));
+const FANTASY_ROSTER = validateRosterSnapshot(JSON.parse(readFileSync(join(HERE,'fantasy-roster.json'),'utf8')));
 const PLAYER_CONTRACTS = JSON.parse(readFileSync(join(HERE,'player-contracts.json'),'utf8'));
 const MAX_BODY = 8 * 1024;
 const SESSION_SECONDS = 7 * 24 * 60 * 60;
@@ -167,14 +169,41 @@ export function createApp(options = {}) {
     mkdirSync(directory, { recursive: true, mode: 0o700 });
     chmodSync(directory, 0o700);
   }
-  const fantasyCatalog = options.fantasyCatalog ?? FANTASY_CATALOG;
+  const baseCatalog = options.fantasyCatalog ?? FANTASY_CATALOG;
+  const rosterCachePath=options.rosterCachePath??(dbPath===':memory:'?null:join(dirname(dbPath),'fantasy-roster.json'));
+  let rosterSnapshot=options.rosterSnapshot?validateRosterSnapshot(options.rosterSnapshot):options.fantasyCatalog?null:FANTASY_ROSTER;
+  let rosterError=null,rosterRefreshing=null;
+  // The newer source controls availability, while older identities remain for
+  // saved teams, their sale values and past points.
+  function retainRosterHistory(previous,next){
+    if(!previous)return next;
+    const players=new Map(previous.players.map(player=>[player.id,{...player,selectable:false}]));
+    for(const player of next.players)players.set(player.id,player);
+    return validateRosterSnapshot({...next,players:[...players.values()].sort((a,b)=>a.id-b.id)});
+  }
+  if(rosterCachePath&&existsSync(rosterCachePath)){
+    try{
+      if(statSync(rosterCachePath).size>2*1024*1024)throw Error();
+      const saved=validateRosterSnapshot(JSON.parse(readFileSync(rosterCachePath,'utf8')));
+      if(Date.parse(saved.fetchedAt)>now())throw Error();
+      rosterSnapshot=!rosterSnapshot||Date.parse(saved.fetchedAt)>=Date.parse(rosterSnapshot.fetchedAt)?retainRosterHistory(rosterSnapshot,saved):retainRosterHistory(saved,rosterSnapshot);
+    }catch{rosterError='The saved player roster could not be verified. Using the bundled NHL roster.';}
+  }
+  let fantasyCatalog=rosterSnapshot?mergeRosterCatalog(baseCatalog,rosterSnapshot):baseCatalog;
+  const canRefreshRoster=Boolean(options.rosterProvider)||(options.allowRosterFetch??(options.fantasyCatalog||options.standingsProvider||options.fantasyProvider?false:options.allowStandingsFetch??process.env.PLAYOFF_PICK_FETCH_ROSTER!=='0'));
+  const rosterProvider=options.rosterProvider??(previous=>fetchRosterSnapshot({catalog:baseCatalog,previous,now:now()}));
   const marketCachePath=options.marketCachePath??(dbPath===':memory:'?null:join(dirname(dbPath),'market-prices.json'));
   let market=initialMarket(fantasyCatalog);
+  let migratedPrices=false;
   if(marketCachePath&&existsSync(marketCachePath)){
-    try{if(statSync(marketCachePath).size>1024*1024)throw Error();const saved=validateMarket(fantasyCatalog,JSON.parse(readFileSync(marketCachePath,'utf8')));if(Date.parse(saved.asOf)>now())throw Error();if(Date.parse(saved.asOf)>=Date.parse(market.asOf))market=saved;}catch{throw Error('Saved fantasy prices could not be verified. Restore the verified market-prices.json backup before trading.');}
+    try{if(statSync(marketCachePath).size>1024*1024)throw Error();const original=JSON.parse(readFileSync(marketCachePath,'utf8')),saved=reconcileMarket(fantasyCatalog,original);if(Date.parse(saved.asOf)>now())throw Error();if(Date.parse(saved.asOf)>=Date.parse(market.asOf)){migratedPrices=saved!==original;market=saved;}}catch{throw Error('Saved fantasy prices could not be verified. Restore the matching fantasy-roster.json and market-prices.json backups before trading.');}
   }
   const flooredMarket=applyMinimumPrice(market);
-  if(flooredMarket!==market){if(marketCachePath)saveSnapshot(marketCachePath,flooredMarket);market=flooredMarket;}
+  // Persist the initial identity archive too, including when live fetches are
+  // disabled, before recording a price snapshot that references new IDs.
+  if(rosterCachePath&&rosterSnapshot)saveSnapshot(rosterCachePath,rosterSnapshot);
+  if(marketCachePath&&(migratedPrices||flooredMarket!==market))saveSnapshot(marketCachePath,flooredMarket);
+  market=flooredMarket;
   const store = createAccountStore(dbPath,{fantasyPlayers:fantasyCatalog.players,fantasyPrices:()=>({players:pricedPlayers(fantasyCatalog,market),version:market.version}),now});
   const fantasyCachePath = options.fantasyCachePath ?? (dbPath === ':memory:' ? null : join(dirname(dbPath),'fantasy-scores.json'));
   const allowFantasyFetch = options.allowFantasyFetch ?? (options.standingsProvider ? false : options.allowStandingsFetch ?? process.env.PLAYOFF_PICK_FETCH_FANTASY !== '0');
@@ -207,6 +236,28 @@ export function createApp(options = {}) {
     gameCount:fantasySnapshot?.games.length??0,stale:Boolean(fantasySnapshot&&Date.parse(fantasySnapshot.fetchedAt)<previousDailyUpdate(now()-UPDATE_GRACE_MS)),
     error:fantasyError??(!fantasySnapshot?(canRefreshFantasy?'Fantasy scores are awaiting a verified 2026–27 update.':'Live fantasy updates are disabled in this preview.'):null),
     modelError:fantasySnapshot?.modelError??null};}
+  function rosterMetadata(){return {available:Boolean(rosterSnapshot),fetchedAt:rosterSnapshot?.fetchedAt??null,
+    stale:Boolean(rosterSnapshot&&Date.parse(rosterSnapshot.fetchedAt)<previousDailyUpdate(now()-UPDATE_GRACE_MS)),
+    error:rosterError,source:rosterSnapshot?.source??null};}
+  async function refreshRoster(){
+    if(closed||!canRefreshRoster)return rosterMetadata();
+    if(rosterRefreshing)return rosterRefreshing;
+    rosterRefreshing=(async()=>{
+      try{
+        const received=validateRosterSnapshot(await rosterProvider(rosterSnapshot));
+        if(Date.parse(received.fetchedAt)>now()||rosterSnapshot&&Date.parse(received.fetchedAt)<Date.parse(rosterSnapshot.fetchedAt))throw Error('Outdated NHL roster');
+        const next=retainRosterHistory(rosterSnapshot,received),catalog=mergeRosterCatalog(baseCatalog,next),prices=reconcileMarket(catalog,market);
+        if(closed)return rosterMetadata();
+        // Save identities before prices: an interrupted write can add the new
+        // minimum prices on restart without losing an existing player's quote.
+        if(rosterCachePath)saveSnapshot(rosterCachePath,next);
+        if(marketCachePath&&prices!==market)saveSnapshot(marketCachePath,prices);
+        rosterSnapshot=next;fantasyCatalog=catalog;market=prices;rosterError=null;
+      }catch{rosterError='The NHL player roster could not be refreshed. The last verified player list remains in use.';}
+      return rosterMetadata();
+    })();
+    try{return await rosterRefreshing;}finally{rosterRefreshing=null;}
+  }
   function marketMetadata(){return {version:market.version,asOf:market.asOf,overdue:Date.parse(market.asOf)<previousPriceUpdate(now()),nextUpdate:new Date(nextPriceUpdate(now())).toISOString(),timeZone:'Europe/Helsinki',day:'Monday',time:'12:00',lastSeasonWeight:.75,currentSeasonWeight:.25,weeklyLimit:.05,minimumPrice:MINIMUM_PLAYER_PRICE,minimumGames:5,skaterProjectionGames:82,goalieProjectionGames:55};}
   function refreshMarket(){const next=updateWeeklyPrices(fantasyCatalog,market,fantasySnapshot,now());if(next!==market){if(marketCachePath)saveSnapshot(marketCachePath,next);market=next;}}
   function fantasyBody(session){
@@ -286,7 +337,7 @@ export function createApp(options = {}) {
     try { return await refreshing; } finally { refreshing = null; }
   }
 
-  const updateScheduler = createDailyScheduler({ run: async()=>{await Promise.allSettled([refreshStandings(),refreshFantasy()]);}, now,
+  const updateScheduler = createDailyScheduler({ run: async()=>{await Promise.allSettled([refreshStandings(),refreshFantasy(),refreshRoster()]);}, now,
     setTimer: options.setTimer, clearTimer: options.clearTimer });
 
   const server = http.createServer({ maxHeaderSize: 8 * 1024 }, async (request, response) => {
@@ -307,11 +358,17 @@ export function createApp(options = {}) {
         return json(response, 200, sessionBody(store.getSession(cookieToken(request, hosting.cookieName))));
       }
       if(path==='/api/fantasy/session'&&request.method==='GET')return json(response,200,fantasyBody(store.getSession(cookieToken(request,hosting.cookieName))));
-      if(path==='/api/fantasy/value'&&request.method==='GET')return json(response,200,{...buildPlayerValues({...fantasyCatalog,players:pricedPlayers(fantasyCatalog,market)},contractUpdater.getSnapshot()),market:marketMetadata(),updateSchedule:contractUpdater.metadata()});
+      if(path==='/api/fantasy/value'&&request.method==='GET')return json(response,200,{...buildPlayerValues({...fantasyCatalog,players:pricedPlayers(fantasyCatalog,market).filter(player=>player.selectable!==false)},contractUpdater.getSnapshot()),roster:rosterMetadata(),market:marketMetadata(),updateSchedule:contractUpdater.metadata()});
+      if(path==='/api/fantasy/weekly-players'&&request.method==='GET'){
+        const query=new URLSearchParams(request.url.includes('?')?request.url.slice(request.url.indexOf('?')+1):'');
+        const week=query.get('week')??'current';
+        if(query.getAll('week').length>1||!['current','previous','month','year'].includes(week))throw failure(400,'Choose this week, last week, this month, or year to date.');
+        return json(response,200,{season:FANTASY_SEASON,...weeklyTopPlayers(fantasyCatalog,fantasySnapshot,{week,now:now()}),scoring:fantasyMetadata()});
+      }
       if(path==='/api/fantasy/players'&&request.method==='GET'){
         const totals=new Map(),currentTeams=new Map(),pending=new Set();
         for(const game of fantasySnapshot?.games??[]){for(const [id,value] of Object.entries(game.scores))totals.set(Number(id),(totals.get(Number(id))??0)+value);for(const [id,team] of Object.entries(game.teams))currentTeams.set(Number(id),team);for(const id of game.pending)pending.add(id);}
-        return json(response,200,{...fantasyCatalog,budget:BUDGET,players:pricedPlayers(fantasyCatalog,market).map(p=>({...p,team:currentTeams.get(p.id)??p.team,seasonPoints:fantasySnapshot?(totals.get(p.id)??0):null,pending:pending.has(p.id)})),scoring:fantasyMetadata(),market:marketMetadata()});
+        return json(response,200,{...fantasyCatalog,budget:BUDGET,players:pricedPlayers(fantasyCatalog,market).map(p=>({...p,team:rosterSnapshot?p.team:currentTeams.get(p.id)??p.team,seasonPoints:fantasySnapshot?(totals.get(p.id)??0):null,pending:pending.has(p.id)})),roster:rosterMetadata(),scoring:fantasyMetadata(),market:marketMetadata()});
       }
       const playerGamesPath=/^\/api\/fantasy\/players\/([1-9]\d*)\/games$/.exec(path);
       if(playerGamesPath&&request.method==='GET'){
@@ -421,11 +478,12 @@ export function createApp(options = {}) {
   server.on('listening', () => {
     try{refreshMarket();}catch{}
     if(canRefreshContracts)contractUpdater.start();
-    if (canRefresh || canRefreshFantasy) {
+    if (canRefresh || canRefreshFantasy || canRefreshRoster) {
       updateScheduler.start();
       // Restore missed noon updates after downtime, while reusing a current cache.
       if (!snapshot || Date.parse(snapshot.fetchedAt) < previousDailyUpdate(now())) void refreshStandings();
       if(!fantasySnapshot||Date.parse(fantasySnapshot.fetchedAt)<previousDailyUpdate(now()))void refreshFantasy();
+      if(!rosterSnapshot||Date.parse(rosterSnapshot.fetchedAt)<previousDailyUpdate(now()))void refreshRoster();
     }
   });
 
@@ -472,10 +530,11 @@ export function createApp(options = {}) {
     }
     if (refreshing) await refreshing;
     if (fantasyRefreshing) await fantasyRefreshing;
+    if (rosterRefreshing) await rosterRefreshing;
     store.close();
   }
 
-  return { server, close, refreshStandings, refreshFantasy, startAdmin: port => admin.start(port), publicOrigin: hosting.publicOrigin };
+  return { server, close, refreshStandings, refreshFantasy, refreshRoster, startAdmin: port => admin.start(port), publicOrigin: hosting.publicOrigin };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {

@@ -324,6 +324,7 @@ export function createAccountStore(dbPath, { fantasyPlayers = [], fantasyPrices 
       const priced=new Map(prices.players.map(p=>[p.id,p]));
       const funds=current.activePlayerIds.length?current.cashBalance+current.activePlayerIds.reduce((n,id)=>n+priced.get(id).price,0):BUDGET;
       let ids;try{ids=validateRoster(playerIds,priced,submit,funds);}catch(error){throw failure(400,error.message);}
+      if(ids.some(id=>priced.get(id).selectable===false&&!current.activePlayerIds.includes(id)))throw failure(400,'A selected player is no longer available in the NHL player market. Choose an available replacement.');
       const timestamp=new Date(fantasyNow()).toISOString();
       let cash=current.cashBalance;
       if (submit) {

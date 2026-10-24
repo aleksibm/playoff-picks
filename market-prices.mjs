@@ -20,6 +20,17 @@ export function validateMarket(catalog,snapshot){
   if(snapshot?.season!==catalog.season||!Number.isFinite(Date.parse(snapshot.asOf))||!snapshot.prices||Object.keys(snapshot.prices).length!==catalog.players.length||catalog.players.some(p=>!Number.isSafeInteger(snapshot.prices[p.id])||snapshot.prices[p.id]<=0)||snapshot.version!==priceVersion(snapshot))throw Error('Invalid fantasy price snapshot');
   return snapshot;
 }
+/** Add debutants without resetting the verified prices or their update date. */
+export function reconcileMarket(catalog,snapshot){
+  const players=new Map(catalog.players.map(player=>[player.id,player]));
+  if(snapshot?.season!==catalog.season||!Number.isFinite(Date.parse(snapshot.asOf))||!snapshot.prices||typeof snapshot.prices!=='object'||Array.isArray(snapshot.prices)||players.size!==catalog.players.length||snapshot.version!==priceVersion(snapshot))throw Error('Invalid fantasy price snapshot');
+  if(Object.entries(snapshot.prices).some(([id,price])=>!players.has(Number(id))||String(Number(id))!==id||!Number.isSafeInteger(price)||price<=0))throw Error('Invalid fantasy price snapshot');
+  const missing=catalog.players.filter(player=>!Object.hasOwn(snapshot.prices,player.id));
+  if(missing.some(player=>player.newcomer!==true))throw Error('Invalid fantasy price snapshot');
+  if(!missing.length)return validateMarket(catalog,snapshot);
+  const next={...snapshot,prices:{...snapshot.prices,...Object.fromEntries(missing.map(player=>[player.id,MINIMUM_PLAYER_PRICE]))}};
+  return {...next,version:priceVersion(next)};
+}
 export function pricedPlayers(catalog,market){return catalog.players.map(p=>({...p,price:market.prices[p.id],basePrice:p.price}));}
 export function updateWeeklyPrices(catalog,market,stats,now=Date.now()){
   market=applyMinimumPrice(market);

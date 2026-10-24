@@ -181,6 +181,59 @@ export function scoreFantasyHistory(history,snapshot,{includeGameLogs=true}={}) 
   return {points:total,pending,players,playerGames};
 }
 
+const weekTimeZone='Europe/Helsinki';
+const weekClock=new Intl.DateTimeFormat('en-GB',{timeZone:weekTimeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+function weekDateParts(time){
+  return Object.fromEntries(weekClock.formatToParts(time).filter(part=>part.type!=='literal').map(part=>[part.type,Number(part.value)]));
+}
+function helsinkiMidnight(calendar){
+  const target=calendar.getTime();let candidate=target;
+  // Calendar-period midnights are unambiguous in Helsinki, but the UTC offset
+  // can differ at the end of a period containing a daylight-saving change.
+  for(let attempt=0;attempt<3;attempt++){
+    const p=weekDateParts(candidate),local=Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second);
+    const corrected=candidate+target-local;
+    if(corrected===candidate)return candidate;
+    candidate=corrected;
+  }
+  return candidate;
+}
+export function fantasyWeek(now=Date.now(),key='current'){
+  if(!['current','previous'].includes(key)||!Number.isFinite(now))throw new RangeError('Invalid fantasy week.');
+  const p=weekDateParts(now),calendar=new Date(Date.UTC(p.year,p.month-1,p.day));
+  calendar.setUTCDate(calendar.getUTCDate()-(calendar.getUTCDay()+6)%7-(key==='previous'?7:0));
+  const start=helsinkiMidnight(calendar);
+  calendar.setUTCDate(calendar.getUTCDate()+7);
+  return {key,start:new Date(start).toISOString(),end:new Date(helsinkiMidnight(calendar)).toISOString(),timeZone:weekTimeZone};
+}
+
+export function fantasyPeriod(now=Date.now(),key='current'){
+  if(key==='current'||key==='previous')return fantasyWeek(now,key);
+  if(!['month','year'].includes(key)||!Number.isFinite(now))throw new RangeError('Invalid fantasy ranking period.');
+  const p=weekDateParts(now),calendar=new Date(Date.UTC(p.year,key==='month'?p.month-1:0,1));
+  return {key,start:new Date(helsinkiMidnight(calendar)).toISOString(),end:new Date(now).toISOString(),timeZone:weekTimeZone};
+}
+
+/** Period totals use only selectable players and completed cached appearances. */
+export function weeklyTopPlayers(catalog,snapshot,{week='current',now=Date.now()}={}){
+  const bounds=fantasyPeriod(now,week),start=Date.parse(bounds.start),end=Date.parse(bounds.end);
+  if(!snapshot||snapshot.season!==catalog.season)return {week:bounds,players:[]};
+  const selectable=new Map(catalog.players.filter(player=>player.selectable!==false).map(player=>[player.id,player])),totals=new Map();
+  const games=snapshot.games.filter(game=>{const time=Date.parse(game.startTime);return time>=start&&time<end;})
+    .sort((a,b)=>Date.parse(a.startTime)-Date.parse(b.startTime)||a.id-b.id);
+  for(const game of games){
+    const pending=new Set(game.pending);
+    for(const [key,points] of Object.entries(game.scores)){
+      const id=Number(key),player=selectable.get(id);if(!player)continue;
+      if(!totals.has(id))totals.set(id,{id,name:player.name,position:player.position,team:player.team,points:0,games:0,pending:false});
+      const total=totals.get(id);total.points+=points;total.games++;total.pending=total.pending||pending.has(id);total.team=game.teams[id]??total.team;
+    }
+  }
+  const players=[...totals.values()].sort((a,b)=>b.points-a.points||a.id-b.id).slice(0,10);
+  let rank=0;players.forEach((player,index)=>{if(index===0||Math.abs(player.points-players[index-1].points)>1e-7)rank=index+1;player.rank=rank;});
+  return {week:bounds,players};
+}
+
 async function mapLimit(items,limit,fn){
   let next=0;const results=new Array(items.length);
   await Promise.all(Array.from({length:Math.min(limit,items.length)},async()=>{while(next<items.length){const i=next++;results[i]=await fn(items[i],i);}}));

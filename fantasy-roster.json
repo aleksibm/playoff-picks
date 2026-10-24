@@ -1,0 +1,6566 @@
+{
+  "season": "20262027",
+  "fetchedAt": "2026-10-22T14:10:10.291Z",
+  "source": "NHL current team rosters and active-player index",
+  "players": [
+    {
+      "id": 8470613,
+      "name": "Brent Burns",
+      "position": "D",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8470621,
+      "name": "Corey Perry",
+      "position": "RW",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8471214,
+      "name": "Alex Ovechkin",
+      "position": "LW",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8471215,
+      "name": "Evgeni Malkin",
+      "position": "C",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8471675,
+      "name": "Sidney Crosby",
+      "position": "C",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8471724,
+      "name": "Kris Letang",
+      "position": "D",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8473419,
+      "name": "Brad Marchand",
+      "position": "LW",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8473422,
+      "name": "Nick Foligno",
+      "position": "LW",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8473512,
+      "name": "Claude Giroux",
+      "position": "RW",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8473533,
+      "name": "Jordan Staal",
+      "position": "C",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8473575,
+      "name": "Semyon Varlamov",
+      "position": "G",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8473986,
+      "name": "Alex Killorn",
+      "position": "LW",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8473994,
+      "name": "Jamie Benn",
+      "position": "LW",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8474013,
+      "name": "Ian Cole",
+      "position": "D",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8474102,
+      "name": "David Perron",
+      "position": "LW",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8474141,
+      "name": "Patrick Kane",
+      "position": "RW",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8474150,
+      "name": "Mikael Backlund",
+      "position": "C",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8474151,
+      "name": "Ryan McDonagh",
+      "position": "D",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8474189,
+      "name": "Lars Eller",
+      "position": "C",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8474563,
+      "name": "Drew Doughty",
+      "position": "D",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8474564,
+      "name": "Steven Stamkos",
+      "position": "C",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8474567,
+      "name": "Zach Bogosian",
+      "position": "D",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8474568,
+      "name": "Luke Schenn",
+      "position": "D",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8474574,
+      "name": "Tyler Myers",
+      "position": "D",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8474578,
+      "name": "Erik Karlsson",
+      "position": "D",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8474586,
+      "name": "Jordan Eberle",
+      "position": "RW",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8474590,
+      "name": "John Carlson",
+      "position": "D",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8474593,
+      "name": "Jacob Markstrom",
+      "position": "G",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8474596,
+      "name": "Jake Allen",
+      "position": "G",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8474600,
+      "name": "Roman Josi",
+      "position": "D",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8474716,
+      "name": "Jared Spurgeon",
+      "position": "D",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8475151,
+      "name": "Kyle Palmieri",
+      "position": "C",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8475158,
+      "name": "Ryan O'Reilly",
+      "position": "C",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8475166,
+      "name": "John Tavares",
+      "position": "C",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8475167,
+      "name": "Victor Hedman",
+      "position": "D",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8475168,
+      "name": "Matt Duchene",
+      "position": "C",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8475170,
+      "name": "Brayden Schenn",
+      "position": "C",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8475171,
+      "name": "Oliver Ekman-Larsson",
+      "position": "D",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8475172,
+      "name": "Nazem Kadri",
+      "position": "C",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8475179,
+      "name": "Dmitry Kulikov",
+      "position": "D",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8475184,
+      "name": "Chris Kreider",
+      "position": "LW",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8475188,
+      "name": "Brayden McNabb",
+      "position": "D",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8475200,
+      "name": "Dmitry Orlov",
+      "position": "D",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8475208,
+      "name": "Brian Dumoulin",
+      "position": "D",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8475218,
+      "name": "Mattias Ekholm",
+      "position": "D",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8475220,
+      "name": "Marcus Foligno",
+      "position": "LW",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8475231,
+      "name": "Casey Cizikas",
+      "position": "C",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8475235,
+      "name": "Nicolas Deslauriers",
+      "position": "LW",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8475253,
+      "name": "Garrett Wilson",
+      "position": "LW",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8475279,
+      "name": "Ben Chiarot",
+      "position": "D",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8475287,
+      "name": "Erik Haula",
+      "position": "LW",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8475311,
+      "name": "Darcy Kuemper",
+      "position": "G",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8475314,
+      "name": "Anders Lee",
+      "position": "LW",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8475324,
+      "name": "Nick Jensen",
+      "position": "D",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8475343,
+      "name": "Nic Dowd",
+      "position": "C",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8475413,
+      "name": "Justin Dowling",
+      "position": "C",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8475455,
+      "name": "Brenden Dillon",
+      "position": "D",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8475462,
+      "name": "Radko Gudas",
+      "position": "D",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8475660,
+      "name": "Cam Talbot",
+      "position": "G",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8475683,
+      "name": "Sergei Bobrovsky",
+      "position": "G",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8475690,
+      "name": "Chris Tanev",
+      "position": "D",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8475692,
+      "name": "Mats Zuccarello",
+      "position": "RW",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8475717,
+      "name": "Calvin Pickard",
+      "position": "G",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8475718,
+      "name": "Justin Holl",
+      "position": "D",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8475722,
+      "name": "Jason Zucker",
+      "position": "LW",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8475726,
+      "name": "Tyler Toffoli",
+      "position": "C",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8475745,
+      "name": "Charlie Coyle",
+      "position": "C",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8475752,
+      "name": "Tyler Pitlick",
+      "position": "C",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8475753,
+      "name": "Justin Faulk",
+      "position": "D",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8475754,
+      "name": "Brock Nelson",
+      "position": "C",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8475760,
+      "name": "Nick Bjugstad",
+      "position": "C",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8475764,
+      "name": "Cam Fowler",
+      "position": "D",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8475768,
+      "name": "Jaden Schwartz",
+      "position": "LW",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8475786,
+      "name": "Zach Hyman",
+      "position": "LW",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8475790,
+      "name": "Erik Gudbranson",
+      "position": "D",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8475791,
+      "name": "Taylor Hall",
+      "position": "LW",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8475794,
+      "name": "Tyler Seguin",
+      "position": "C",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8475795,
+      "name": "Dylan McIlrath",
+      "position": "D",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8475798,
+      "name": "Mikael Granlund",
+      "position": "C",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8475799,
+      "name": "Nino Niederreiter",
+      "position": "RW",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8475809,
+      "name": "Scott Wedgewood",
+      "position": "G",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8475810,
+      "name": "Bryan Rust",
+      "position": "RW",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8475831,
+      "name": "Philipp Grubauer",
+      "position": "G",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8475842,
+      "name": "Sam Carrick",
+      "position": "C",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8475848,
+      "name": "Brendan Gallagher",
+      "position": "RW",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8475883,
+      "name": "Frederik Andersen",
+      "position": "G",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8475913,
+      "name": "Mark Stone",
+      "position": "RW",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8476278,
+      "name": "Colin Blackwell",
+      "position": "C",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8476292,
+      "name": "Ondrej Palat",
+      "position": "LW",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8476312,
+      "name": "Josh Manson",
+      "position": "D",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8476331,
+      "name": "Dylan DeMelo",
+      "position": "D",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8476341,
+      "name": "Anton Forsberg",
+      "position": "G",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8476372,
+      "name": "Nick Seeler",
+      "position": "D",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8476374,
+      "name": "Sean Kuraly",
+      "position": "C",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8476389,
+      "name": "Vincent Trocheck",
+      "position": "C",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8476392,
+      "name": "Adam Lowry",
+      "position": "C",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8476393,
+      "name": "Nick Cousins",
+      "position": "C",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8476399,
+      "name": "Blake Coleman",
+      "position": "LW",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8476412,
+      "name": "Jordan Binnington",
+      "position": "G",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8476419,
+      "name": "Jean-Gabriel Pageau",
+      "position": "C",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8476422,
+      "name": "Mike Reilly",
+      "position": "D",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8476429,
+      "name": "Scott Mayfield",
+      "position": "D",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8476432,
+      "name": "Boone Jenner",
+      "position": "C",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8476434,
+      "name": "John Gibson",
+      "position": "G",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8476441,
+      "name": "Joel Edmundson",
+      "position": "D",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8476448,
+      "name": "William Karlsson",
+      "position": "C",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8476453,
+      "name": "Nikita Kucherov",
+      "position": "RW",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8476454,
+      "name": "Ryan Nugent-Hopkins",
+      "position": "C",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8476455,
+      "name": "Gabriel Landeskog",
+      "position": "LW",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8476456,
+      "name": "Jonathan Huberdeau",
+      "position": "LW",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8476457,
+      "name": "Adam Larsson",
+      "position": "D",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8476458,
+      "name": "Ryan Strome",
+      "position": "C",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8476459,
+      "name": "Mika Zibanejad",
+      "position": "C",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8476460,
+      "name": "Mark Scheifele",
+      "position": "C",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8476461,
+      "name": "Sean Couturier",
+      "position": "C",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8476462,
+      "name": "Dougie Hamilton",
+      "position": "D",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8476463,
+      "name": "Jonas Brodin",
+      "position": "D",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8476467,
+      "name": "Jamie Oleksiak",
+      "position": "D",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8476468,
+      "name": "J.T. Miller",
+      "position": "C",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8476469,
+      "name": "Joel Armia",
+      "position": "RW",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8476473,
+      "name": "Connor Murphy",
+      "position": "D",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8476474,
+      "name": "Stefan Noesen",
+      "position": "RW",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8476479,
+      "name": "Phillip Danault",
+      "position": "C",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8476480,
+      "name": "Vladislav Namestnikov",
+      "position": "C",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8476483,
+      "name": "Rickard Rakell",
+      "position": "RW",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8476539,
+      "name": "Jonathan Marchessault",
+      "position": "C",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8476624,
+      "name": "Barclay Goodrow",
+      "position": "C",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8476826,
+      "name": "Yanni Gourde",
+      "position": "C",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8476853,
+      "name": "Morgan Rielly",
+      "position": "D",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8476854,
+      "name": "Hampus Lindholm",
+      "position": "D",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8476867,
+      "name": "Brendan Gaunce",
+      "position": "C",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8476869,
+      "name": "Brady Skjei",
+      "position": "D",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8476872,
+      "name": "Scott Laughton",
+      "position": "C",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8476873,
+      "name": "Mark Jankowski",
+      "position": "LW",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8476874,
+      "name": "Olli Maatta",
+      "position": "D",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8476875,
+      "name": "Mike Matheson",
+      "position": "D",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8476878,
+      "name": "Zemgus Girgensons",
+      "position": "C",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8476879,
+      "name": "Cody Ceci",
+      "position": "D",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8476880,
+      "name": "Tom Wilson",
+      "position": "RW",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8476881,
+      "name": "Tomas Hertl",
+      "position": "C",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8476882,
+      "name": "Teuvo Teravainen",
+      "position": "C",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8476883,
+      "name": "Andrei Vasilevskiy",
+      "position": "G",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8476885,
+      "name": "Jacob Trouba",
+      "position": "D",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8476887,
+      "name": "Filip Forsberg",
+      "position": "LW",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8476889,
+      "name": "Radek Faksa",
+      "position": "C",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8476891,
+      "name": "Matt Grzelcyk",
+      "position": "D",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8476892,
+      "name": "Colton Parayko",
+      "position": "D",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8476902,
+      "name": "Esa Lindell",
+      "position": "D",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8476905,
+      "name": "Chandler Stephenson",
+      "position": "C",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8476906,
+      "name": "Shayne Gostisbehere",
+      "position": "D",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8476907,
+      "name": "Mackenzie MacEachern",
+      "position": "LW",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8476914,
+      "name": "Joonas Korpisalo",
+      "position": "G",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8476917,
+      "name": "Adam Pelech",
+      "position": "D",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8476921,
+      "name": "Jordan Martinook",
+      "position": "LW",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8476925,
+      "name": "Colton Sissons",
+      "position": "C",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8476927,
+      "name": "Teddy Blueger",
+      "position": "C",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8476931,
+      "name": "Jake McCabe",
+      "position": "D",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8476932,
+      "name": "Anthony Stolarz",
+      "position": "G",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8476945,
+      "name": "Connor Hellebuyck",
+      "position": "G",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8476952,
+      "name": "Dominic Toninato",
+      "position": "C",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8476958,
+      "name": "Jaccob Slavin",
+      "position": "D",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8476967,
+      "name": "Brett Kulak",
+      "position": "D",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8476979,
+      "name": "Erik Gustafsson",
+      "position": "D",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8476981,
+      "name": "Josh Anderson",
+      "position": "RW",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8476994,
+      "name": "Vinnie Hinostroza",
+      "position": "C",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8476999,
+      "name": "Linus Ullmark",
+      "position": "G",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8477015,
+      "name": "Connor Brown",
+      "position": "RW",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8477021,
+      "name": "Alexander Kerfoot",
+      "position": "C",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8477034,
+      "name": "Jaycob Megna",
+      "position": "D",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8477070,
+      "name": "Liam O'Brien",
+      "position": "C",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8477073,
+      "name": "Kurtis MacDermid",
+      "position": "LW",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8477149,
+      "name": "Scott Sabourin",
+      "position": "RW",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8477220,
+      "name": "Nate Schmidt",
+      "position": "D",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8477320,
+      "name": "Anton Blidh",
+      "position": "LW",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8477335,
+      "name": "Kyle Burroughs",
+      "position": "D",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8477346,
+      "name": "MacKenzie Weegar",
+      "position": "D",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8477365,
+      "name": "Connor Clifton",
+      "position": "D",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8477369,
+      "name": "Carson Soucy",
+      "position": "D",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8477402,
+      "name": "Pavel Buchnevich",
+      "position": "LW",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8477404,
+      "name": "Jake Guentzel",
+      "position": "C",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8477406,
+      "name": "Mattias Janmark",
+      "position": "C",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8477407,
+      "name": "Anthony Duclair",
+      "position": "LW",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8477409,
+      "name": "Carter Verhaeghe",
+      "position": "C",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8477416,
+      "name": "Oliver Bjorkstrand",
+      "position": "RW",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8477419,
+      "name": "Mason Geertsen",
+      "position": "LW",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8477424,
+      "name": "Juuse Saros",
+      "position": "G",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8477425,
+      "name": "Miles Wood",
+      "position": "LW",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8477426,
+      "name": "Nick Paul",
+      "position": "LW",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8477429,
+      "name": "Andrew Copp",
+      "position": "C",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8477444,
+      "name": "Andre Burakovsky",
+      "position": "LW",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8477446,
+      "name": "Michael McCarron",
+      "position": "C",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8477447,
+      "name": "Shea Theodore",
+      "position": "D",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8477450,
+      "name": "Jason Dickinson",
+      "position": "C",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8477451,
+      "name": "Ryan Hartman",
+      "position": "RW",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8477456,
+      "name": "J.T. Compher",
+      "position": "LW",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8477463,
+      "name": "Steven Santini",
+      "position": "D",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8477465,
+      "name": "Tristan Jarry",
+      "position": "G",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8477476,
+      "name": "Artturi Lehkonen",
+      "position": "LW",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8477478,
+      "name": "William Carrier",
+      "position": "LW",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8477479,
+      "name": "Tyler Bertuzzi",
+      "position": "LW",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8477480,
+      "name": "Eric Comrie",
+      "position": "G",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8477484,
+      "name": "Spencer Martin",
+      "position": "G",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8477488,
+      "name": "Brett Pesce",
+      "position": "D",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8477492,
+      "name": "Nathan MacKinnon",
+      "position": "C",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8477493,
+      "name": "Aleksander Barkov",
+      "position": "C",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8477495,
+      "name": "Seth Jones",
+      "position": "D",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8477496,
+      "name": "Elias Lindholm",
+      "position": "C",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8477497,
+      "name": "Sean Monahan",
+      "position": "C",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8477498,
+      "name": "Darnell Nurse",
+      "position": "D",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8477499,
+      "name": "Rasmus Ristolainen",
+      "position": "D",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8477500,
+      "name": "Bo Horvat",
+      "position": "C",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8477501,
+      "name": "Valeri Nichushkin",
+      "position": "RW",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8477503,
+      "name": "Max Domi",
+      "position": "C",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8477504,
+      "name": "Josh Morrissey",
+      "position": "D",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8477505,
+      "name": "Alexander Wennberg",
+      "position": "C",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8477506,
+      "name": "Ryan Pulock",
+      "position": "D",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8477507,
+      "name": "Nikita Zadorov",
+      "position": "D",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8477511,
+      "name": "Anthony Mantha",
+      "position": "RW",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8477527,
+      "name": "Ross Johnston",
+      "position": "LW",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8477541,
+      "name": "Dakota Mermis",
+      "position": "D",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8477810,
+      "name": "Joel Hanley",
+      "position": "D",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8477831,
+      "name": "Pheonix Copley",
+      "position": "G",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8477839,
+      "name": "Conor Sheary",
+      "position": "LW",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8477845,
+      "name": "Trevor van Riemsdyk",
+      "position": "D",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8477903,
+      "name": "Garnet Hathaway",
+      "position": "RW",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8477919,
+      "name": "Frederick Gaudreau",
+      "position": "C",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8477932,
+      "name": "Aaron Ekblad",
+      "position": "D",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8477933,
+      "name": "Sam Reinhart",
+      "position": "C",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8477934,
+      "name": "Leon Draisaitl",
+      "position": "C",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8477935,
+      "name": "Sam Bennett",
+      "position": "C",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8477938,
+      "name": "Haydn Fleury",
+      "position": "D",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8477939,
+      "name": "William Nylander",
+      "position": "RW",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8477940,
+      "name": "Nikolaj Ehlers",
+      "position": "LW",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8477942,
+      "name": "Kevin Fiala",
+      "position": "LW",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8477946,
+      "name": "Dylan Larkin",
+      "position": "C",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8477948,
+      "name": "Travis Sanheim",
+      "position": "D",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8477949,
+      "name": "Alex Tuch",
+      "position": "RW",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8477950,
+      "name": "Tony DeAngelo",
+      "position": "D",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8477951,
+      "name": "Nick Schmaltz",
+      "position": "C",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8477953,
+      "name": "Kasperi Kapanen",
+      "position": "RW",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8477955,
+      "name": "Jared McCann",
+      "position": "LW",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8477956,
+      "name": "David Pastrnak",
+      "position": "RW",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8477960,
+      "name": "Adrian Kempe",
+      "position": "RW",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8477964,
+      "name": "Ivan Barbashev",
+      "position": "LW",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8477967,
+      "name": "Thatcher Demko",
+      "position": "G",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8477968,
+      "name": "Alex Nedeljkovic",
+      "position": "G",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8477969,
+      "name": "Marcus Pettersson",
+      "position": "D",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8477970,
+      "name": "Vitek Vanecek",
+      "position": "G",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8477971,
+      "name": "Andreas Englund",
+      "position": "D",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8477986,
+      "name": "Brandon Montour",
+      "position": "D",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8477987,
+      "name": "Ryan Donato",
+      "position": "C",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8477989,
+      "name": "Christian Dvorak",
+      "position": "C",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8477992,
+      "name": "Jonas Johansson",
+      "position": "G",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8477993,
+      "name": "Justin Kirkland",
+      "position": "C",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8477998,
+      "name": "Warren Foegele",
+      "position": "LW",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8478007,
+      "name": "Elvis Merzlikins",
+      "position": "G",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8478009,
+      "name": "Ilya Sorokin",
+      "position": "G",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8478010,
+      "name": "Brayden Point",
+      "position": "C",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8478013,
+      "name": "Jake Walman",
+      "position": "D",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8478020,
+      "name": "Michael Amadio",
+      "position": "RW",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8478024,
+      "name": "Ville Husso",
+      "position": "G",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8478038,
+      "name": "Devon Toews",
+      "position": "D",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8478042,
+      "name": "Viktor Arvidsson",
+      "position": "LW",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8478043,
+      "name": "Sam Lafferty",
+      "position": "C",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8478046,
+      "name": "Danton Heinen",
+      "position": "LW",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8478047,
+      "name": "Michael Bunting",
+      "position": "LW",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8478048,
+      "name": "Igor Shesterkin",
+      "position": "G",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8478055,
+      "name": "Gustav Forsling",
+      "position": "D",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8478057,
+      "name": "Dakota Joshua",
+      "position": "C",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8478109,
+      "name": "Victor Olofsson",
+      "position": "LW",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8478133,
+      "name": "Jake Evans",
+      "position": "C",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8478136,
+      "name": "Jake Middleton",
+      "position": "D",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8478147,
+      "name": "Bokondji Imama",
+      "position": "LW",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8478173,
+      "name": "Hayden Hodgson",
+      "position": "RW",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8478178,
+      "name": "Darren Raddysh",
+      "position": "D",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8478211,
+      "name": "Dryden Hunt",
+      "position": "LW",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8478233,
+      "name": "Andrew Mangiapane",
+      "position": "LW",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8478366,
+      "name": "Frank Vatrano",
+      "position": "RW",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8478396,
+      "name": "Noah Hanifin",
+      "position": "D",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8478397,
+      "name": "Rasmus Andersson",
+      "position": "D",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8478398,
+      "name": "Kyle Connor",
+      "position": "LW",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8478399,
+      "name": "Jonas Siegenthaler",
+      "position": "D",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8478401,
+      "name": "Pavel Zacha",
+      "position": "C",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8478402,
+      "name": "Connor McDavid",
+      "position": "C",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8478403,
+      "name": "Jack Eichel",
+      "position": "C",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8478406,
+      "name": "Mackenzie Blackwood",
+      "position": "G",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8478407,
+      "name": "Vince Dunn",
+      "position": "D",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8478413,
+      "name": "Jordan Greenway",
+      "position": "LW",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8478414,
+      "name": "Timo Meier",
+      "position": "RW",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8478416,
+      "name": "Erik Cernak",
+      "position": "D",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8478420,
+      "name": "Mikko Rantanen",
+      "position": "RW",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8478421,
+      "name": "A.J. Greer",
+      "position": "LW",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8478424,
+      "name": "Jansen Harkins",
+      "position": "C",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8478427,
+      "name": "Sebastian Aho",
+      "position": "C",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8478434,
+      "name": "Keegan Kolesar",
+      "position": "RW",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8478435,
+      "name": "Dan Vladar",
+      "position": "G",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8478438,
+      "name": "Tommy Novak",
+      "position": "C",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8478439,
+      "name": "Travis Konecny",
+      "position": "RW",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8478440,
+      "name": "Dylan Strome",
+      "position": "C",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8478443,
+      "name": "Brandon Carlo",
+      "position": "D",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8478444,
+      "name": "Brock Boeser",
+      "position": "RW",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8478445,
+      "name": "Mathew Barzal",
+      "position": "C",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8478449,
+      "name": "Roope Hintz",
+      "position": "C",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8478450,
+      "name": "Parker Wotherspoon",
+      "position": "D",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8478452,
+      "name": "Caleb Jones",
+      "position": "D",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8478454,
+      "name": "Noah Juulsen",
+      "position": "D",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8478458,
+      "name": "Jack Roslovic",
+      "position": "C",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8478460,
+      "name": "Zach Werenski",
+      "position": "D",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8478462,
+      "name": "Nicolas Roy",
+      "position": "C",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8478463,
+      "name": "Anthony Beauvillier",
+      "position": "RW",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8478465,
+      "name": "Guillaume Brisebois",
+      "position": "D",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8478468,
+      "name": "Jeremy Lauzon",
+      "position": "D",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8478469,
+      "name": "Thomas Chabot",
+      "position": "D",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8478470,
+      "name": "Samuel Montembeault",
+      "position": "G",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8478472,
+      "name": "Mathieu Joseph",
+      "position": "RW",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8478474,
+      "name": "Lawson Crouse",
+      "position": "LW",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8478476,
+      "name": "Kyle Capobianco",
+      "position": "D",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8478483,
+      "name": "Mitch Marner",
+      "position": "RW",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8478493,
+      "name": "Joel Eriksson Ek",
+      "position": "C",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8478498,
+      "name": "Jake DeBrusk",
+      "position": "LW",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8478499,
+      "name": "Adin Hill",
+      "position": "G",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8478500,
+      "name": "Ivan Provorov",
+      "position": "D",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8478502,
+      "name": "Dennis Gilbert",
+      "position": "D",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8478507,
+      "name": "John Marino",
+      "position": "D",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8478508,
+      "name": "Yakov Trenin",
+      "position": "C",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8478519,
+      "name": "Anthony Cirelli",
+      "position": "C",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8478542,
+      "name": "Evan Rodrigues",
+      "position": "C",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8478550,
+      "name": "Artemi Panarin",
+      "position": "LW",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8478569,
+      "name": "Noel Acciari",
+      "position": "C",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8478831,
+      "name": "Kevin Stenlund",
+      "position": "C",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8478840,
+      "name": "Will Borgen",
+      "position": "D",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8478851,
+      "name": "Alexandre Carrier",
+      "position": "D",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8478854,
+      "name": "Ryan Shea",
+      "position": "D",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8478856,
+      "name": "Conor Garland",
+      "position": "RW",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8478859,
+      "name": "Niko Mikkola",
+      "position": "D",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8478864,
+      "name": "Kirill Kaprizov",
+      "position": "LW",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8478872,
+      "name": "Karel Vejmelka",
+      "position": "G",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8478873,
+      "name": "Troy Terry",
+      "position": "RW",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8478874,
+      "name": "Adam Gaudette",
+      "position": "RW",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8478882,
+      "name": "Vladislav Gavrikov",
+      "position": "D",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8478888,
+      "name": "Cameron Hughes",
+      "position": "C",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8478891,
+      "name": "Mason Appleton",
+      "position": "C",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8478904,
+      "name": "Steven Lorentz",
+      "position": "C",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8478911,
+      "name": "Matt Roy",
+      "position": "D",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8478916,
+      "name": "Joey Daccord",
+      "position": "G",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8478967,
+      "name": "Lane Pederson",
+      "position": "C",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8478970,
+      "name": "Jalen Chatfield",
+      "position": "D",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8478975,
+      "name": "Mason Marchment",
+      "position": "LW",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8479026,
+      "name": "Philippe Myers",
+      "position": "D",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8479066,
+      "name": "Ryan Lomberg",
+      "position": "LW",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8479193,
+      "name": "Casey DeSmith",
+      "position": "G",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8479292,
+      "name": "Charlie Lindgren",
+      "position": "G",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8479293,
+      "name": "Brandon Tanev",
+      "position": "LW",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8479312,
+      "name": "Alex Lyon",
+      "position": "G",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8479314,
+      "name": "Matthew Tkachuk",
+      "position": "LW",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8479318,
+      "name": "Auston Matthews",
+      "position": "C",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8479323,
+      "name": "Adam Fox",
+      "position": "D",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8479324,
+      "name": "Ryan Lindgren",
+      "position": "D",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8479325,
+      "name": "Charlie McAvoy",
+      "position": "D",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8479336,
+      "name": "Carl Grundstrom",
+      "position": "RW",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8479337,
+      "name": "Alex DeBrincat",
+      "position": "RW",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8479343,
+      "name": "Clayton Keller",
+      "position": "RW",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8479345,
+      "name": "Jakob Chychrun",
+      "position": "D",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8479346,
+      "name": "Dillon Dube",
+      "position": "C",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8479351,
+      "name": "Sam Steel",
+      "position": "C",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8479353,
+      "name": "Brett Howden",
+      "position": "C",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8479359,
+      "name": "Beck Malenstyn",
+      "position": "LW",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8479361,
+      "name": "Joseph Woll",
+      "position": "G",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8479365,
+      "name": "Trent Frederic",
+      "position": "C",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8479368,
+      "name": "Max Jones",
+      "position": "LW",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8479369,
+      "name": "Andrew Peeke",
+      "position": "D",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8479370,
+      "name": "Tyson Jost",
+      "position": "C",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8479371,
+      "name": "Dante Fabbro",
+      "position": "D",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8479372,
+      "name": "Josh Mahura",
+      "position": "D",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8479378,
+      "name": "Logan Stanley",
+      "position": "D",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8479385,
+      "name": "Jordan Kyrou",
+      "position": "RW",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8479387,
+      "name": "Keaton Middleton",
+      "position": "D",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8479390,
+      "name": "Taylor Raddysh",
+      "position": "RW",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8479393,
+      "name": "Noah Gregor",
+      "position": "LW",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8479394,
+      "name": "Carter Hart",
+      "position": "G",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8479395,
+      "name": "Dennis Cholowski",
+      "position": "D",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8479398,
+      "name": "Samuel Girard",
+      "position": "D",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8479400,
+      "name": "Pierre-Luc Dubois",
+      "position": "C",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8479406,
+      "name": "Filip Gustavsson",
+      "position": "G",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8479407,
+      "name": "Jesper Bratt",
+      "position": "LW",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8479410,
+      "name": "Mikhail Sergachev",
+      "position": "D",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8479420,
+      "name": "Tage Thompson",
+      "position": "C",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8479425,
+      "name": "Filip Hronek",
+      "position": "D",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8479442,
+      "name": "Troy Stecher",
+      "position": "D",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8479520,
+      "name": "Brandon Duhaime",
+      "position": "LW",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8479525,
+      "name": "Ross Colton",
+      "position": "C",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8479542,
+      "name": "Brandon Hagel",
+      "position": "LW",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8479543,
+      "name": "Michael Pezzetta",
+      "position": "LW",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8479576,
+      "name": "Vincent Desharnais",
+      "position": "D",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8479591,
+      "name": "Michael Eyssimont",
+      "position": "C",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8479619,
+      "name": "Michael Carcone",
+      "position": "LW",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8479638,
+      "name": "Justin Brazeau",
+      "position": "RW",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8479639,
+      "name": "Dylan Coghlan",
+      "position": "D",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8479644,
+      "name": "Matt Luff",
+      "position": "RW",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8479661,
+      "name": "Tanner Jeannot",
+      "position": "LW",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8479671,
+      "name": "Mathieu Olivier",
+      "position": "RW",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8479675,
+      "name": "Trevor Moore",
+      "position": "LW",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8479705,
+      "name": "Jeffrey Viel",
+      "position": "LW",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8479718,
+      "name": "Alex Barré-Boulet",
+      "position": "C",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8479772,
+      "name": "Zack MacEwen",
+      "position": "RW",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8479941,
+      "name": "Justin Danforth",
+      "position": "RW",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8479942,
+      "name": "Dominik Shine",
+      "position": "RW",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8479944,
+      "name": "Zachary Aston-Reese",
+      "position": "LW",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8479968,
+      "name": "Vinni Lettieri",
+      "position": "C",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8479973,
+      "name": "Stuart Skinner",
+      "position": "G",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8479976,
+      "name": "Juuso Välimäki",
+      "position": "D",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8479977,
+      "name": "Kailer Yamamoto",
+      "position": "RW",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8479979,
+      "name": "Jake Oettinger",
+      "position": "G",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8479980,
+      "name": "Nicolas Hague",
+      "position": "D",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8479981,
+      "name": "Jonah Gadjovich",
+      "position": "LW",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8479982,
+      "name": "Conor Timmins",
+      "position": "D",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8479983,
+      "name": "Mario Ferraro",
+      "position": "D",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8479985,
+      "name": "Cale Fleury",
+      "position": "D",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8479987,
+      "name": "Morgan Geekie",
+      "position": "C",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8479992,
+      "name": "Michael Rasmussen",
+      "position": "C",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8479996,
+      "name": "Cody Glass",
+      "position": "C",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8479998,
+      "name": "Mikey Anderson",
+      "position": "D",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8479999,
+      "name": "Casey Mittelstadt",
+      "position": "C",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8480001,
+      "name": "Urho Vaakanainen",
+      "position": "D",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8480002,
+      "name": "Nico Hischier",
+      "position": "C",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8480003,
+      "name": "Jesper Boqvist",
+      "position": "C",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8480009,
+      "name": "Eeli Tolvanen",
+      "position": "RW",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8480012,
+      "name": "Elias Pettersson",
+      "position": "C",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8480014,
+      "name": "Gabriel Vilardi",
+      "position": "C",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8480015,
+      "name": "Owen Tippett",
+      "position": "RW",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8480018,
+      "name": "Nick Suzuki",
+      "position": "C",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8480021,
+      "name": "Jack Studnicka",
+      "position": "C",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8480022,
+      "name": "Michael DiPietro",
+      "position": "G",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8480023,
+      "name": "Robert Thomas",
+      "position": "C",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8480027,
+      "name": "Jason Robertson",
+      "position": "LW",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8480028,
+      "name": "Morgan Frost",
+      "position": "C",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8480029,
+      "name": "Alex Formenton",
+      "position": "LW",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8480035,
+      "name": "Henri Jokiharju",
+      "position": "D",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8480036,
+      "name": "Miro Heiskanen",
+      "position": "D",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8480039,
+      "name": "Martin Necas",
+      "position": "C",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8480043,
+      "name": "Timothy Liljegren",
+      "position": "D",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8480045,
+      "name": "Ukko-Pekka Luukkonen",
+      "position": "G",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8480049,
+      "name": "Dylan Samberg",
+      "position": "D",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8480058,
+      "name": "Pierre-Olivier Joseph",
+      "position": "D",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8480064,
+      "name": "Josh Norris",
+      "position": "C",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8480068,
+      "name": "Ryan Poehling",
+      "position": "C",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8480069,
+      "name": "Cale Makar",
+      "position": "D",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8480074,
+      "name": "Alexandre Texier",
+      "position": "LW",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8480075,
+      "name": "Cameron Crotty",
+      "position": "D",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8480078,
+      "name": "Filip Chytil",
+      "position": "C",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8480084,
+      "name": "Nick DeSimone",
+      "position": "D",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8480113,
+      "name": "Alex Iafallo",
+      "position": "LW",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8480145,
+      "name": "Neal Pionk",
+      "position": "D",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8480185,
+      "name": "Eetu Luostarinen",
+      "position": "C",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8480188,
+      "name": "Fabian Zetterlund",
+      "position": "LW",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8480192,
+      "name": "Johnathan Kovacevic",
+      "position": "D",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8480193,
+      "name": "Daniil Tarasov",
+      "position": "G",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8480196,
+      "name": "Jacob Bryson",
+      "position": "D",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8480208,
+      "name": "Drake Batherson",
+      "position": "RW",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8480220,
+      "name": "Noah Cates",
+      "position": "LW",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8480246,
+      "name": "Nick Perbix",
+      "position": "D",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8480259,
+      "name": "Ben Jones",
+      "position": "C",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8480280,
+      "name": "Jeremy Swayman",
+      "position": "G",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8480281,
+      "name": "Alexey Toropchenko",
+      "position": "RW",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8480289,
+      "name": "Morgan Barron",
+      "position": "C",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8480291,
+      "name": "Skyler Brind'Amour",
+      "position": "C",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8480313,
+      "name": "Logan Thompson",
+      "position": "G",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8480326,
+      "name": "Sheldon Dries",
+      "position": "C",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8480336,
+      "name": "Sean Walker",
+      "position": "D",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8480355,
+      "name": "Mark Kastelic",
+      "position": "C",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8480426,
+      "name": "Charle-Edouard D'Astous",
+      "position": "D",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8480434,
+      "name": "Sean Durzi",
+      "position": "D",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8480448,
+      "name": "Parker Kelly",
+      "position": "C",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8480459,
+      "name": "Pius Suter",
+      "position": "C",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8480727,
+      "name": "Zach Whitecloud",
+      "position": "D",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8480748,
+      "name": "Kiefer Sherwood",
+      "position": "LW",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8480762,
+      "name": "Eric Robinson",
+      "position": "LW",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8480796,
+      "name": "Martin Fehérváry",
+      "position": "D",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8480797,
+      "name": "Joel Farabee",
+      "position": "LW",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8480800,
+      "name": "Quinn Hughes",
+      "position": "D",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8480801,
+      "name": "Brady Tkachuk",
+      "position": "LW",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8480802,
+      "name": "Ryan McLeod",
+      "position": "C",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8480803,
+      "name": "Evan Bouchard",
+      "position": "D",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8480806,
+      "name": "Isac Lundeström",
+      "position": "C",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8480807,
+      "name": "Mattias Samuelsson",
+      "position": "D",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8480813,
+      "name": "Joseph Veleno",
+      "position": "C",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8480817,
+      "name": "K'Andre Miller",
+      "position": "D",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8480825,
+      "name": "Patrick Giles",
+      "position": "RW",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8480828,
+      "name": "Michael Callahan",
+      "position": "D",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8480829,
+      "name": "Jesperi Kotkaniemi",
+      "position": "C",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8480830,
+      "name": "Andrei Svechnikov",
+      "position": "RW",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8480831,
+      "name": "Alec Regula",
+      "position": "D",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8480834,
+      "name": "Ty Emberson",
+      "position": "D",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8480835,
+      "name": "Jack Drury",
+      "position": "C",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8480839,
+      "name": "Rasmus Dahlin",
+      "position": "D",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8480840,
+      "name": "Oskar Bäck",
+      "position": "C",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8480842,
+      "name": "Filip Hallander",
+      "position": "C",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8480843,
+      "name": "Lukas Dostal",
+      "position": "G",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8480848,
+      "name": "Ty Dellandrea",
+      "position": "C",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8480849,
+      "name": "Barrett Hayton",
+      "position": "C",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8480855,
+      "name": "Jack McBain",
+      "position": "C",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8480860,
+      "name": "Kevin Bahl",
+      "position": "D",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8480865,
+      "name": "Noah Dobson",
+      "position": "D",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8480870,
+      "name": "Bo Groulx",
+      "position": "C",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8480873,
+      "name": "Rasmus Sandin",
+      "position": "D",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8480874,
+      "name": "Adam Ginning",
+      "position": "D",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8480876,
+      "name": "Curtis Douglas",
+      "position": "C",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8480878,
+      "name": "Nils Lundkvist",
+      "position": "D",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8480879,
+      "name": "Jacob Bernard-Docker",
+      "position": "D",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8480887,
+      "name": "Jordan Harris",
+      "position": "D",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8480891,
+      "name": "Michael Kesselring",
+      "position": "D",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8480893,
+      "name": "Kirill Marchenko",
+      "position": "RW",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8480947,
+      "name": "Kevin Lankinen",
+      "position": "G",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8480950,
+      "name": "Ilya Lyubushkin",
+      "position": "D",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8480980,
+      "name": "Connor Dewar",
+      "position": "C",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8480981,
+      "name": "Joel Hofer",
+      "position": "G",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8480990,
+      "name": "Declan Chisholm",
+      "position": "D",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8480995,
+      "name": "Pontus Holmberg",
+      "position": "RW",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8481006,
+      "name": "Tyler Tucker",
+      "position": "D",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8481013,
+      "name": "Jonatan Berggren",
+      "position": "RW",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8481014,
+      "name": "Alexander Romanov",
+      "position": "D",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8481020,
+      "name": "Justus Annunen",
+      "position": "G",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8481024,
+      "name": "Linus Karlsson",
+      "position": "C",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8481028,
+      "name": "Martin Pospisil",
+      "position": "C",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8481030,
+      "name": "Jack St. Ivany",
+      "position": "D",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8481032,
+      "name": "Paul Cotter",
+      "position": "LW",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8481033,
+      "name": "Akira Schmid",
+      "position": "G",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8481035,
+      "name": "Samuel Ersson",
+      "position": "G",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8481043,
+      "name": "Cole Koepke",
+      "position": "LW",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8481056,
+      "name": "Spencer Stastney",
+      "position": "D",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8481065,
+      "name": "Angus Crookshank",
+      "position": "C",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8481068,
+      "name": "Yegor Sharangovich",
+      "position": "C",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8481077,
+      "name": "John Leonard",
+      "position": "LW",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8481122,
+      "name": "Simon Benoit",
+      "position": "D",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8481161,
+      "name": "Jake Christiansen",
+      "position": "D",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8481167,
+      "name": "Brayden Pachal",
+      "position": "D",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8481186,
+      "name": "Logan O'Connor",
+      "position": "RW",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8481219,
+      "name": "Jonathan Aspirot",
+      "position": "D",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8481237,
+      "name": "Kyle MacLean",
+      "position": "C",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8481477,
+      "name": "Nico Sturm",
+      "position": "C",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8481481,
+      "name": "Blake Lizotte",
+      "position": "C",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8481517,
+      "name": "Brett Leason",
+      "position": "RW",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8481518,
+      "name": "Nolan Foote",
+      "position": "LW",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8481519,
+      "name": "Spencer Knight",
+      "position": "G",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8481522,
+      "name": "Peyton Krebs",
+      "position": "C",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8481523,
+      "name": "Kirby Dach",
+      "position": "C",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8481524,
+      "name": "Bowen Byram",
+      "position": "D",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8481525,
+      "name": "Matthew Robertson",
+      "position": "D",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8481527,
+      "name": "Kaedan Korczak",
+      "position": "D",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8481528,
+      "name": "Dylan Cozens",
+      "position": "C",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8481529,
+      "name": "Trent Miner",
+      "position": "G",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8481532,
+      "name": "Alex Turcotte",
+      "position": "C",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8481533,
+      "name": "Trevor Zegras",
+      "position": "C",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8481534,
+      "name": "Raphael Lavoie",
+      "position": "C",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8481535,
+      "name": "Nils Hoglander",
+      "position": "LW",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8481538,
+      "name": "Judd Caulfield",
+      "position": "RW",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8481540,
+      "name": "Cole Caufield",
+      "position": "RW",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8481542,
+      "name": "Moritz Seider",
+      "position": "D",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8481546,
+      "name": "Cam York",
+      "position": "D",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8481547,
+      "name": "Simon Lundmark",
+      "position": "D",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8481551,
+      "name": "Colten Ellis",
+      "position": "G",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8481553,
+      "name": "Bobby Brink",
+      "position": "RW",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8481554,
+      "name": "Kaapo Kakko",
+      "position": "RW",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8481557,
+      "name": "Matt Boldy",
+      "position": "LW",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8481559,
+      "name": "Jack Hughes",
+      "position": "C",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8481562,
+      "name": "Domenick Fensore",
+      "position": "D",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8481563,
+      "name": "Drew Helleson",
+      "position": "D",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8481564,
+      "name": "Ryan Johnson",
+      "position": "D",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8481567,
+      "name": "Henry Thrun",
+      "position": "D",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8481568,
+      "name": "Alex Vlasic",
+      "position": "D",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8481569,
+      "name": "Marshall Warren",
+      "position": "D",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8481572,
+      "name": "Ville Heinola",
+      "position": "D",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8481580,
+      "name": "Connor McMichael",
+      "position": "LW",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8481581,
+      "name": "Thomas Harley",
+      "position": "D",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8481582,
+      "name": "Nick Robertson",
+      "position": "LW",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8481591,
+      "name": "Samuel Poulin",
+      "position": "RW",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8481592,
+      "name": "Jakob Pelletier",
+      "position": "LW",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8481593,
+      "name": "Jayden Struble",
+      "position": "D",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8481596,
+      "name": "Shane Pinto",
+      "position": "C",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8481598,
+      "name": "Philip Broberg",
+      "position": "D",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8481601,
+      "name": "Simon Holmstrom",
+      "position": "RW",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8481604,
+      "name": "Pavel Dorofeyev",
+      "position": "RW",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8481605,
+      "name": "Jackson LaCombe",
+      "position": "D",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8481606,
+      "name": "Jordan Spence",
+      "position": "D",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8481607,
+      "name": "Albert Johansson",
+      "position": "D",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8481611,
+      "name": "Pyotr Kochetkov",
+      "position": "G",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8481617,
+      "name": "Vasily Podkolzin",
+      "position": "RW",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8481618,
+      "name": "Alex Newhook",
+      "position": "C",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8481624,
+      "name": "Ilya Mikheyev",
+      "position": "RW",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8481641,
+      "name": "Joel Kiviranta",
+      "position": "LW",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8481656,
+      "name": "Aliaksei Protas",
+      "position": "LW",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8481668,
+      "name": "Arturs Silovs",
+      "position": "G",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8481692,
+      "name": "Dustin Wolf",
+      "position": "G",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8481704,
+      "name": "Juuso Parssinen",
+      "position": "C",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8481711,
+      "name": "Matias Maccelli",
+      "position": "LW",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8481715,
+      "name": "Hunter Skinner",
+      "position": "D",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8481716,
+      "name": "Dmitri Voronkov",
+      "position": "LW",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8481719,
+      "name": "Max Crozier",
+      "position": "D",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8481721,
+      "name": "Arseny Gritsyuk",
+      "position": "RW",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8481725,
+      "name": "Elmer Soderblom",
+      "position": "LW",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8481726,
+      "name": "Adam Edstrom",
+      "position": "C",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8481732,
+      "name": "Andre Lee",
+      "position": "LW",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8481754,
+      "name": "Nikita Nesterenko",
+      "position": "C",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8481789,
+      "name": "Tye Kartye",
+      "position": "LW",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8481806,
+      "name": "Louis Crevier",
+      "position": "D",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8481848,
+      "name": "Jacob Gaucher",
+      "position": "C",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8482055,
+      "name": "Drew O'Connor",
+      "position": "LW",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8482062,
+      "name": "Cole Smith",
+      "position": "RW",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8482070,
+      "name": "Mitchell Chaffee",
+      "position": "RW",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8482072,
+      "name": "Jack Ahcan",
+      "position": "D",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8482073,
+      "name": "Braden Schneider",
+      "position": "D",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8482074,
+      "name": "Connor Zary",
+      "position": "C",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8482076,
+      "name": "Nico Daws",
+      "position": "G",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8482077,
+      "name": "Dylan Holloway",
+      "position": "LW",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8482078,
+      "name": "Lucas Raymond",
+      "position": "LW",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8482079,
+      "name": "Marco Rossi",
+      "position": "C",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8482087,
+      "name": "Kaiden Guhle",
+      "position": "D",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8482088,
+      "name": "Justin Sourdif",
+      "position": "C",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8482089,
+      "name": "Jake Neighbours",
+      "position": "LW",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8482092,
+      "name": "Ridly Greig",
+      "position": "C",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8482093,
+      "name": "Seth Jarvis",
+      "position": "RW",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8482094,
+      "name": "Daemon Hunt",
+      "position": "D",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8482095,
+      "name": "Tyler Kleven",
+      "position": "D",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8482097,
+      "name": "Jack Quinn",
+      "position": "RW",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8482100,
+      "name": "Alexander Nikishin",
+      "position": "D",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8482103,
+      "name": "Ozzy Wiesblatt",
+      "position": "C",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8482105,
+      "name": "Jake Sanderson",
+      "position": "D",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8482107,
+      "name": "Mike Benning",
+      "position": "D",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8482109,
+      "name": "Alexis Lafrenière",
+      "position": "LW",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8482110,
+      "name": "Dawson Mercer",
+      "position": "C",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8482111,
+      "name": "Justin Barron",
+      "position": "D",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8482113,
+      "name": "Anton Lundell",
+      "position": "C",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8482116,
+      "name": "Tim Stützle",
+      "position": "C",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8482117,
+      "name": "Lukas Reichel",
+      "position": "LW",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8482118,
+      "name": "Sam Colangelo",
+      "position": "RW",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8482122,
+      "name": "Brock Faber",
+      "position": "D",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8482123,
+      "name": "Drew Commesso",
+      "position": "G",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8482124,
+      "name": "Quinton Byfield",
+      "position": "RW",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8482126,
+      "name": "Emil Andrae",
+      "position": "D",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8482132,
+      "name": "Brett Berard",
+      "position": "LW",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8482137,
+      "name": "Yaroslav Askarov",
+      "position": "G",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8482142,
+      "name": "Jamie Drysdale",
+      "position": "D",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8482145,
+      "name": "Mavrik Bourque",
+      "position": "C",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8482146,
+      "name": "Luke Evangelista",
+      "position": "RW",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8482148,
+      "name": "Hendrix Lapierre",
+      "position": "C",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8482149,
+      "name": "Cole Perfetti",
+      "position": "C",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8482153,
+      "name": "Brendan Brisson",
+      "position": "C",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8482155,
+      "name": "Alex Laferriere",
+      "position": "RW",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8482157,
+      "name": "Will Cuylle",
+      "position": "LW",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8482159,
+      "name": "Tyson Foerster",
+      "position": "RW",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8482162,
+      "name": "Roby Jarventie",
+      "position": "LW",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8482165,
+      "name": "Yan Kuznetsov",
+      "position": "D",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8482166,
+      "name": "Shakir Mukhamadullin",
+      "position": "D",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8482168,
+      "name": "Maxim Groshev",
+      "position": "D",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8482171,
+      "name": "William Wallinder",
+      "position": "D",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8482172,
+      "name": "Landon Slaggert",
+      "position": "LW",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8482174,
+      "name": "William Villeneuve",
+      "position": "D",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8482175,
+      "name": "JJ Peterka",
+      "position": "RW",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8482176,
+      "name": "Wyatt Kaiser",
+      "position": "D",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8482177,
+      "name": "Marat Khusnutdinov",
+      "position": "C",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8482178,
+      "name": "Ian Moore",
+      "position": "D",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8482187,
+      "name": "Ronan Seeley",
+      "position": "D",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8482192,
+      "name": "Isaak Phillips",
+      "position": "D",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8482193,
+      "name": "Dylan Garand",
+      "position": "G",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8482201,
+      "name": "Gage Goncalves",
+      "position": "C",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8482206,
+      "name": "Ethan Cardwell",
+      "position": "RW",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8482221,
+      "name": "Devon Levi",
+      "position": "G",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8482245,
+      "name": "Artem Zub",
+      "position": "D",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8482259,
+      "name": "Bobby McMann",
+      "position": "C",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8482408,
+      "name": "Jeff Malott",
+      "position": "LW",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8482445,
+      "name": "Devin Cooley",
+      "position": "G",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8482447,
+      "name": "Leevi Meriläinen",
+      "position": "G",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8482451,
+      "name": "Mikael Pyyhtia",
+      "position": "LW",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8482459,
+      "name": "Tyrel Bauer",
+      "position": "D",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8482460,
+      "name": "Matt Rempe",
+      "position": "C",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8482465,
+      "name": "Rémi Poirier",
+      "position": "G",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8482470,
+      "name": "Ilya Solovyov",
+      "position": "D",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8482475,
+      "name": "Egor Chinakhov",
+      "position": "RW",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8482476,
+      "name": "Emil Heineman",
+      "position": "LW",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8482479,
+      "name": "Trevor Kuntar",
+      "position": "C",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8482482,
+      "name": "Adam Wilsby",
+      "position": "D",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8482487,
+      "name": "Jakub Dobes",
+      "position": "G",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8482511,
+      "name": "Mason Lohrei",
+      "position": "D",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8482515,
+      "name": "Artur Akhtyamov",
+      "position": "G",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8482516,
+      "name": "Matthew Kessel",
+      "position": "D",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8482634,
+      "name": "Alex Steeves",
+      "position": "C",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8482641,
+      "name": "Matt Kiersted",
+      "position": "D",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8482652,
+      "name": "Walker Duehr",
+      "position": "RW",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8482655,
+      "name": "J.J. Moser",
+      "position": "D",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8482657,
+      "name": "Sebastian Cossa",
+      "position": "G",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8482659,
+      "name": "Josh Doan",
+      "position": "RW",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8482660,
+      "name": "Kent Johnson",
+      "position": "C",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8482661,
+      "name": "Jesper Wallstedt",
+      "position": "G",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8482663,
+      "name": "Dylan Duke",
+      "position": "LW",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8482665,
+      "name": "Matty Beniers",
+      "position": "C",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8482666,
+      "name": "Scott Morrow",
+      "position": "D",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8482667,
+      "name": "William Eklund",
+      "position": "LW",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8482671,
+      "name": "Owen Power",
+      "position": "D",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8482679,
+      "name": "Matt Coronato",
+      "position": "RW",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8482684,
+      "name": "Luke Hughes",
+      "position": "D",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8482691,
+      "name": "Aatu Räty",
+      "position": "C",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8482699,
+      "name": "Dylan Guenther",
+      "position": "RW",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8482700,
+      "name": "Nolan Allan",
+      "position": "D",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8482702,
+      "name": "Logan Stankoven",
+      "position": "C",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8482703,
+      "name": "Colton Dach",
+      "position": "C",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8482705,
+      "name": "Cole Sillinger",
+      "position": "C",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8482713,
+      "name": "Mackie Samoskevich",
+      "position": "RW",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8482715,
+      "name": "Ryan Ufko",
+      "position": "D",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8482720,
+      "name": "Matthew Knies",
+      "position": "LW",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8482726,
+      "name": "Samuel Helenius",
+      "position": "C",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8482730,
+      "name": "Brandt Clarke",
+      "position": "D",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8482731,
+      "name": "Tyson Hinds",
+      "position": "D",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8482733,
+      "name": "Logan Mailloux",
+      "position": "D",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8482737,
+      "name": "Zachary Bolduc",
+      "position": "RW",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8482740,
+      "name": "Wyatt Johnston",
+      "position": "C",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8482742,
+      "name": "Zachary L'Heureux",
+      "position": "LW",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8482745,
+      "name": "Mason McTavish",
+      "position": "C",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8482747,
+      "name": "Brennan Othmann",
+      "position": "LW",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8482751,
+      "name": "Ryan Winterton",
+      "position": "C",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8482758,
+      "name": "Ville Koivunen",
+      "position": "RW",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8482761,
+      "name": "Carl Lindbom",
+      "position": "G",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8482762,
+      "name": "Simon Edvinsson",
+      "position": "D",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8482765,
+      "name": "Isak Rosen",
+      "position": "RW",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8482766,
+      "name": "William Stromgren",
+      "position": "LW",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8482768,
+      "name": "Fedor Svechkov",
+      "position": "C",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8482775,
+      "name": "Oliver Kapanen",
+      "position": "C",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8482781,
+      "name": "Carson Lambos",
+      "position": "D",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8482784,
+      "name": "Zach Dean",
+      "position": "C",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8482785,
+      "name": "Justin Robidas",
+      "position": "C",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8482787,
+      "name": "Nikita Chibrikov",
+      "position": "RW",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8482802,
+      "name": "Carter Mazur",
+      "position": "LW",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8482803,
+      "name": "Olen Zellweger",
+      "position": "D",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8482804,
+      "name": "Ty Murchison",
+      "position": "D",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8482806,
+      "name": "William Trudeau",
+      "position": "D",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8482807,
+      "name": "Ethan Del Mastro",
+      "position": "D",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8482809,
+      "name": "Jackson Blake",
+      "position": "RW",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8482821,
+      "name": "Arvid Soderblom",
+      "position": "G",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8482858,
+      "name": "Ryker Evans",
+      "position": "D",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8482859,
+      "name": "Zack Ostapchuk",
+      "position": "C",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8482866,
+      "name": "Ville Ottavainen",
+      "position": "D",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8482874,
+      "name": "Jacob Melanson",
+      "position": "RW",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8482877,
+      "name": "Jaroslav Chmelar",
+      "position": "RW",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8482896,
+      "name": "Tyson Kozak",
+      "position": "C",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8482911,
+      "name": "Joel Nystrom",
+      "position": "D",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8482929,
+      "name": "Emil Lilleberg",
+      "position": "D",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8482941,
+      "name": "Shane Lachance",
+      "position": "LW",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8482949,
+      "name": "Arsenii Sergeev",
+      "position": "G",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8482953,
+      "name": "Taylor Makar",
+      "position": "LW",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8482964,
+      "name": "Arber Xhekaj",
+      "position": "D",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8482982,
+      "name": "Jet Greaves",
+      "position": "G",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8483017,
+      "name": "Frederic Brunet",
+      "position": "D",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8483395,
+      "name": "Arshdeep Bains",
+      "position": "LW",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8483398,
+      "name": "Declan Carlile",
+      "position": "D",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8483406,
+      "name": "Taylor Ward",
+      "position": "RW",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8483424,
+      "name": "Owen Beck",
+      "position": "C",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8483425,
+      "name": "Lian Bichsel",
+      "position": "D",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8483429,
+      "name": "Seamus Casey",
+      "position": "D",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8483431,
+      "name": "Logan Cooley",
+      "position": "C",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8483432,
+      "name": "Luca Del Bel Belluz",
+      "position": "C",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8483433,
+      "name": "Jack Devine",
+      "position": "RW",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8483445,
+      "name": "Cutter Gauthier",
+      "position": "LW",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8483447,
+      "name": "Conor Geekie",
+      "position": "C",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8483448,
+      "name": "Isaiah George",
+      "position": "D",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8483450,
+      "name": "Ryan Greene",
+      "position": "C",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8483452,
+      "name": "Hunter Haight",
+      "position": "C",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8483455,
+      "name": "Isaac Howard",
+      "position": "LW",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8483457,
+      "name": "Lane Hutson",
+      "position": "D",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8483460,
+      "name": "David Jiricek",
+      "position": "D",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8483463,
+      "name": "Aleksanteri Kaskimaki",
+      "position": "C",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8483464,
+      "name": "Marco Kasper",
+      "position": "C",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8483465,
+      "name": "Joakim Kemell",
+      "position": "RW",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8483466,
+      "name": "Kevin Korchinski",
+      "position": "D",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8483467,
+      "name": "Kirill Kudryavtsev",
+      "position": "D",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8483468,
+      "name": "Jiri Kulich",
+      "position": "C",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8483471,
+      "name": "Brad Lambert",
+      "position": "C",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8483472,
+      "name": "Maveric Lamoureux",
+      "position": "D",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8483476,
+      "name": "Jonathan Lekkerimäki",
+      "position": "RW",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8483478,
+      "name": "Rieger Lorenz",
+      "position": "LW",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8483482,
+      "name": "Tristan Luneau",
+      "position": "D",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8483485,
+      "name": "Denton Mateychuk",
+      "position": "D",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8483489,
+      "name": "Fraser Minten",
+      "position": "C",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8483490,
+      "name": "Pavel Mintyukov",
+      "position": "D",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8483491,
+      "name": "Ivan Miroshnichenko",
+      "position": "LW",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8483493,
+      "name": "Frank Nazar",
+      "position": "C",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8483494,
+      "name": "Ty Nelson",
+      "position": "D",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8483495,
+      "name": "Simon Nemec",
+      "position": "D",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8483499,
+      "name": "Liam Ohgren",
+      "position": "LW",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8483500,
+      "name": "Noah Ostlund",
+      "position": "C",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8483505,
+      "name": "Matthew Poitras",
+      "position": "C",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8483506,
+      "name": "Sam Rinzel",
+      "position": "D",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8483510,
+      "name": "Elias Salomonsson",
+      "position": "D",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8483512,
+      "name": "Matt Savoie",
+      "position": "C",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8483513,
+      "name": "Reid Schaefer",
+      "position": "LW",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8483515,
+      "name": "Juraj Slafkovský",
+      "position": "LW",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8483516,
+      "name": "Jimmy Snuggerud",
+      "position": "RW",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8483521,
+      "name": "Noah Warren",
+      "position": "D",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8483524,
+      "name": "Shane Wright",
+      "position": "C",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8483525,
+      "name": "Danila Yurov",
+      "position": "RW",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8483526,
+      "name": "Danil Zhilkin",
+      "position": "C",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8483531,
+      "name": "Brian Halonen",
+      "position": "LW",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8483532,
+      "name": "Clay Stevenson",
+      "position": "G",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8483546,
+      "name": "Marshall Rifai",
+      "position": "D",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8483548,
+      "name": "Brandon Bussi",
+      "position": "G",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8483553,
+      "name": "Marc Gatcomb",
+      "position": "C",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8483565,
+      "name": "Nick Blankenburg",
+      "position": "D",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8483570,
+      "name": "Ben Meyers",
+      "position": "C",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8483573,
+      "name": "Ethen Frank",
+      "position": "RW",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8483609,
+      "name": "Adam Klapka",
+      "position": "RW",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8483669,
+      "name": "Adam Sykora",
+      "position": "LW",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8483675,
+      "name": "Kenny Connors",
+      "position": "C",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8483676,
+      "name": "Stephen Halliday",
+      "position": "C",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8483678,
+      "name": "Elias Pettersson",
+      "position": "D",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8483679,
+      "name": "Anton Johansson",
+      "position": "D",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8483686,
+      "name": "Adam Engstrom",
+      "position": "D",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8483687,
+      "name": "Marek Alscher",
+      "position": "D",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8483690,
+      "name": "Noah Laba",
+      "position": "C",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8483695,
+      "name": "Amadeus Lombardi",
+      "position": "C",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8483696,
+      "name": "Cole O'Hara",
+      "position": "RW",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8483699,
+      "name": "Angus Booth",
+      "position": "D",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8483703,
+      "name": "Sergei Murashov",
+      "position": "G",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8483710,
+      "name": "Dennis Hildeby",
+      "position": "G",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8483712,
+      "name": "Ludvig Jansson",
+      "position": "D",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8483728,
+      "name": "Jared Davidson",
+      "position": "C",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8483731,
+      "name": "Alex Bump",
+      "position": "LW",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8483733,
+      "name": "Nikita Grebenkin",
+      "position": "RW",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8483752,
+      "name": "Dominic James",
+      "position": "C",
+      "team": "TBL",
+      "selectable": true
+    },
+    {
+      "id": 8483756,
+      "name": "Jared Wright",
+      "position": "RW",
+      "team": "LAK",
+      "selectable": true
+    },
+    {
+      "id": 8483760,
+      "name": "Hunter McDonald",
+      "position": "D",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8483766,
+      "name": "David Spacek",
+      "position": "D",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8483768,
+      "name": "Victor Mancini",
+      "position": "D",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8483771,
+      "name": "Sandis Vilmanis",
+      "position": "LW",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8483787,
+      "name": "Cole Knuble",
+      "position": "RW",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8483808,
+      "name": "Andrei Kuzmenko",
+      "position": "LW",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8483841,
+      "name": "Xavier Parent",
+      "position": "C",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8483890,
+      "name": "Braeden Bowman",
+      "position": "RW",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8483930,
+      "name": "Ivan Ivan",
+      "position": "C",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8484135,
+      "name": "Parker Ford",
+      "position": "C",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8484136,
+      "name": "Max Sasson",
+      "position": "C",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8484142,
+      "name": "Denver Barkey",
+      "position": "C",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8484144,
+      "name": "Connor Bedard",
+      "position": "C",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8484145,
+      "name": "Zach Benson",
+      "position": "LW",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8484148,
+      "name": "Oliver Bonk",
+      "position": "D",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8484149,
+      "name": "Gavin Brindley",
+      "position": "C",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8484152,
+      "name": "Luca Cagnoni",
+      "position": "D",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8484153,
+      "name": "Leo Carlsson",
+      "position": "C",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8484154,
+      "name": "Jonathan Castagna",
+      "position": "C",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8484158,
+      "name": "Easton Cowan",
+      "position": "RW",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8484160,
+      "name": "Nate Danielson",
+      "position": "C",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8484164,
+      "name": "Dalibor Dvorsky",
+      "position": "RW",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8484166,
+      "name": "Adam Fantilli",
+      "position": "C",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8484169,
+      "name": "Drew Fortescue",
+      "position": "D",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8484170,
+      "name": "Jacob Fowler",
+      "position": "G",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8484177,
+      "name": "Lenni Hameenaho",
+      "position": "RW",
+      "team": "NJD",
+      "selectable": true
+    },
+    {
+      "id": 8484180,
+      "name": "Samuel Honzek",
+      "position": "LW",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8484185,
+      "name": "Nick Lardis",
+      "position": "LW",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8484186,
+      "name": "Ryan Leonard",
+      "position": "RW",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8484188,
+      "name": "Theo Lindstein",
+      "position": "D",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8484197,
+      "name": "Oliver Moore",
+      "position": "C",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8484203,
+      "name": "Bradly Nadeau",
+      "position": "LW",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8484210,
+      "name": "Gabe Perreault",
+      "position": "RW",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8484214,
+      "name": "Luca Pinelli",
+      "position": "C",
+      "team": "CBJ",
+      "selectable": true
+    },
+    {
+      "id": 8484220,
+      "name": "David Reinbacher",
+      "position": "D",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8484221,
+      "name": "Calum Ritchie",
+      "position": "C",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8484223,
+      "name": "Axel Sandin-Pellikka",
+      "position": "D",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8484227,
+      "name": "Will Smith",
+      "position": "C",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8484230,
+      "name": "Otto Stenberg",
+      "position": "C",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8484234,
+      "name": "Aydar Suniev",
+      "position": "LW",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8484240,
+      "name": "Tom Willander",
+      "position": "D",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8484241,
+      "name": "Matthew Wood",
+      "position": "RW",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8484242,
+      "name": "Brayden Yager",
+      "position": "C",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8484255,
+      "name": "Jason Polin",
+      "position": "RW",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8484258,
+      "name": "Sam Malinski",
+      "position": "D",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8484262,
+      "name": "Travis Mitchell",
+      "position": "D",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8484268,
+      "name": "Nikita Tolopilo",
+      "position": "G",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8484287,
+      "name": "Cole McWard",
+      "position": "D",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8484304,
+      "name": "Uvis Balinskis",
+      "position": "D",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8484305,
+      "name": "Zach Metsa",
+      "position": "D",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8484321,
+      "name": "Nikolas Matinpalo",
+      "position": "D",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8484380,
+      "name": "Wilmer Skoog",
+      "position": "C",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8484386,
+      "name": "Dmitri Simashev",
+      "position": "D",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8484387,
+      "name": "Matvei Michkov",
+      "position": "RW",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8484388,
+      "name": "Daniil But",
+      "position": "LW",
+      "team": "UTA",
+      "selectable": true
+    },
+    {
+      "id": 8484390,
+      "name": "Roman Kantserov",
+      "position": "RW",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8484392,
+      "name": "Felix Unger Sörum",
+      "position": "RW",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8484403,
+      "name": "Florian Xhekaj",
+      "position": "LW",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8484406,
+      "name": "Ty Mueller",
+      "position": "C",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8484428,
+      "name": "Charles Alexis Legault",
+      "position": "D",
+      "team": "CAR",
+      "selectable": true
+    },
+    {
+      "id": 8484471,
+      "name": "Emmitt Finnie",
+      "position": "C",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8484529,
+      "name": "Connor Clattenburg",
+      "position": "C",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8484759,
+      "name": "Carter Yakemchuk",
+      "position": "D",
+      "team": "OTT",
+      "selectable": true
+    },
+    {
+      "id": 8484762,
+      "name": "Beckett Sennecke",
+      "position": "RW",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8484768,
+      "name": "Zayne Parekh",
+      "position": "D",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8484779,
+      "name": "Jett Luchanko",
+      "position": "C",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8484783,
+      "name": "Artyom Levshunov",
+      "position": "D",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8484790,
+      "name": "Adam Jiricek",
+      "position": "D",
+      "team": "STL",
+      "selectable": true
+    },
+    {
+      "id": 8484794,
+      "name": "Michael Brandsegg-Nygård",
+      "position": "RW",
+      "team": "DET",
+      "selectable": true
+    },
+    {
+      "id": 8484797,
+      "name": "Konsta Helenius",
+      "position": "C",
+      "team": "BUF",
+      "selectable": true
+    },
+    {
+      "id": 8484798,
+      "name": "Zeev Buium",
+      "position": "D",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8484800,
+      "name": "Berkly Catton",
+      "position": "C",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8484801,
+      "name": "Macklin Celebrini",
+      "position": "C",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8484803,
+      "name": "Trevor Connelly",
+      "position": "LW",
+      "team": "VGK",
+      "selectable": true
+    },
+    {
+      "id": 8484806,
+      "name": "Sam Dickinson",
+      "position": "D",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8484821,
+      "name": "Sam Morton",
+      "position": "C",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8484829,
+      "name": "Justin Hryckowian",
+      "position": "C",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8484860,
+      "name": "Matvei Gridin",
+      "position": "RW",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8484873,
+      "name": "Cole Hutson",
+      "position": "D",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8484900,
+      "name": "Cooper Black",
+      "position": "G",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8484901,
+      "name": "Jacob Quillan",
+      "position": "C",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8484911,
+      "name": "Collin Graf",
+      "position": "RW",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8484933,
+      "name": "Mikulas Hovorka",
+      "position": "D",
+      "team": "FLA",
+      "selectable": true
+    },
+    {
+      "id": 8484938,
+      "name": "Arttu Hyry",
+      "position": "RW",
+      "team": "DAL",
+      "selectable": true
+    },
+    {
+      "id": 8484958,
+      "name": "Maxim Tsyplakov",
+      "position": "RW",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8484984,
+      "name": "Ivan Demidov",
+      "position": "RW",
+      "team": "MTL",
+      "selectable": true
+    },
+    {
+      "id": 8484994,
+      "name": "Igor Chernyshov",
+      "position": "LW",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8484999,
+      "name": "Ilya Protas",
+      "position": "LW",
+      "team": "WSH",
+      "selectable": true
+    },
+    {
+      "id": 8485366,
+      "name": "Matthew Schaefer",
+      "position": "D",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8485383,
+      "name": "Jake O'Brien",
+      "position": "C",
+      "team": "SEA",
+      "selectable": true
+    },
+    {
+      "id": 8485385,
+      "name": "Braeden Cootes",
+      "position": "C",
+      "team": "VAN",
+      "selectable": true
+    },
+    {
+      "id": 8485388,
+      "name": "Victor Eklund",
+      "position": "RW",
+      "team": "NYI",
+      "selectable": true
+    },
+    {
+      "id": 8485391,
+      "name": "Anton Frondell",
+      "position": "C",
+      "team": "CHI",
+      "selectable": true
+    },
+    {
+      "id": 8485395,
+      "name": "James Hagens",
+      "position": "C",
+      "team": "BOS",
+      "selectable": true
+    },
+    {
+      "id": 8485402,
+      "name": "Michael Misa",
+      "position": "C",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8485405,
+      "name": "Brady Martin",
+      "position": "C",
+      "team": "NSH",
+      "selectable": true
+    },
+    {
+      "id": 8485406,
+      "name": "Porter Martone",
+      "position": "RW",
+      "team": "PHI",
+      "selectable": true
+    },
+    {
+      "id": 8485414,
+      "name": "Ben Kindel",
+      "position": "C",
+      "team": "PIT",
+      "selectable": true
+    },
+    {
+      "id": 8485511,
+      "name": "Quinn Hutson",
+      "position": "RW",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8485512,
+      "name": "Tim Washe",
+      "position": "C",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8485702,
+      "name": "Maxim Shabanov",
+      "position": "RW",
+      "team": "MIN",
+      "selectable": true
+    },
+    {
+      "id": 8485957,
+      "name": "Alberts Smits",
+      "position": "D",
+      "team": "NYR",
+      "selectable": true
+    },
+    {
+      "id": 8486025,
+      "name": "Viggo Björck",
+      "position": "C",
+      "team": "WPG",
+      "selectable": true
+    },
+    {
+      "id": 8486052,
+      "name": "Nikita Klepov",
+      "position": "RW",
+      "team": "ANA",
+      "selectable": true
+    },
+    {
+      "id": 8486056,
+      "name": "Tyson Gross",
+      "position": "C",
+      "team": "CGY",
+      "selectable": true
+    },
+    {
+      "id": 8486067,
+      "name": "Gavin McKenna",
+      "position": "LW",
+      "team": "TOR",
+      "selectable": true
+    },
+    {
+      "id": 8486103,
+      "name": "Ivar Stenberg",
+      "position": "LW",
+      "team": "SJS",
+      "selectable": true
+    },
+    {
+      "id": 8486161,
+      "name": "Owen Michaels",
+      "position": "RW",
+      "team": "EDM",
+      "selectable": true
+    },
+    {
+      "id": 8486171,
+      "name": "T.J. Hughes",
+      "position": "RW",
+      "team": "COL",
+      "selectable": true
+    },
+    {
+      "id": 8486189,
+      "name": "Vitali Pinchuk",
+      "position": "C",
+      "team": "NSH",
+      "selectable": true
+    }
+  ]
+}
