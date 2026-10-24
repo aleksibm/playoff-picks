@@ -35,6 +35,7 @@ const STATIC_FILES = new Map([
   ['/fantasy.html', ['fantasy.html', 'text/html; charset=utf-8']],
   ['/fantasy.css', ['fantasy.css', 'text/css; charset=utf-8']],
   ['/fantasy.js', ['fantasy.js', 'text/javascript; charset=utf-8']],
+  ['/fantasy-rink.js', ['fantasy-rink.js', 'text/javascript; charset=utf-8']],
   ['/fantasy-rules.js', ['fantasy-rules.js', 'text/javascript; charset=utf-8']],
   ['/fantasy/value', ['player-value.html', 'text/html; charset=utf-8']],
   ['/fantasy/value/', ['player-value.html', 'text/html; charset=utf-8']],
@@ -165,6 +166,8 @@ export function createApp(options = {}) {
   const provider = options.standingsProvider ?? fetchStandings;
   const canRefresh = Boolean(options.standingsProvider) || allowStandingsFetch;
   const now = options.now ?? Date.now;
+  const previewData=options.previewData===true;
+  if(previewData&&(hosting.secure||process.env.NODE_ENV==='production'))throw new Error('Preview test data is only available in local previews.');
   if (!options.dbPath) {
     mkdirSync(directory, { recursive: true, mode: 0o700 });
     chmodSync(directory, 0o700);
@@ -232,7 +235,7 @@ export function createApp(options = {}) {
     catch{fantasyError='Saved fantasy scores could not be verified. Awaiting an update.';}
   }
 
-  function fantasyMetadata(){return {available:Boolean(fantasySnapshot),fetchedAt:fantasySnapshot?.fetchedAt??null,
+  function fantasyMetadata(){return {...(previewData?{demo:true}:{}),available:Boolean(fantasySnapshot),fetchedAt:fantasySnapshot?.fetchedAt??null,
     gameCount:fantasySnapshot?.games.length??0,stale:Boolean(fantasySnapshot&&Date.parse(fantasySnapshot.fetchedAt)<previousDailyUpdate(now()-UPDATE_GRACE_MS)),
     error:fantasyError??(!fantasySnapshot?(canRefreshFantasy?'Fantasy scores are awaiting a verified 2026–27 update.':'Live fantasy updates are disabled in this preview.'):null),
     modelError:fantasySnapshot?.modelError??null};}
@@ -259,7 +262,7 @@ export function createApp(options = {}) {
     try{return await rosterRefreshing;}finally{rosterRefreshing=null;}
   }
   function marketMetadata(){return {version:market.version,asOf:market.asOf,overdue:Date.parse(market.asOf)<previousPriceUpdate(now()),nextUpdate:new Date(nextPriceUpdate(now())).toISOString(),timeZone:'Europe/Helsinki',day:'Monday',time:'12:00',lastSeasonWeight:.75,currentSeasonWeight:.25,weeklyLimit:.05,minimumPrice:MINIMUM_PLAYER_PRICE,minimumGames:5,skaterProjectionGames:82,goalieProjectionGames:55};}
-  function refreshMarket(){const next=updateWeeklyPrices(fantasyCatalog,market,fantasySnapshot,now());if(next!==market){if(marketCachePath)saveSnapshot(marketCachePath,next);market=next;}}
+  function refreshMarket(){if(previewData)return;const next=updateWeeklyPrices(fantasyCatalog,market,fantasySnapshot,now());if(next!==market){if(marketCachePath)saveSnapshot(marketCachePath,next);market=next;}}
   function fantasyBody(session){
     const entry=session?store.getFantasy(session.user.id):null;
     return {user:session?.user??null,csrfToken:session?.csrfToken??null,entry,

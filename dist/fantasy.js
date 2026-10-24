@@ -1,4 +1,5 @@
 import { BUDGET, FANTASY_SEASON, SLOTS, money, points, playerRole, rosterProgress } from './fantasy-rules.js';
+import { renderTeamRink } from './fantasy-rink.js';
 
 const $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -6,6 +7,7 @@ let catalog=[],byId=new Map(),draft=[],session={user:null,entry:null,score:{poin
 let feed=null,marketError=null,authGeneration=0,priceMarket=null;
 let gameLogContext=null,gameLogRequest=0;
 let editMode=false,viewUserId=null;
+const expandedLeagueTeams=new Set();
 let weeklySelection='current',weeklyRequest=0,weeklyData=null,weeklyLoading=false,weeklyError=null,weeklyLastRead=0;
 const rankingPeriods={
   current:{label:'This week',title:'Players of the week.',time:'this week',calendar:'Monday to Sunday'},
@@ -103,7 +105,7 @@ function renderRoster(){
 }
 function scoreStatus(metadata){
   const updated=metadata?.fetchedAt?new Date(metadata.fetchedAt).toLocaleString('en-GB',{timeZone:'Europe/Helsinki',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):null;
-  return [metadata?.error,metadata?.stale?'Update overdue; showing the last verified scores.':null,updated?`Updated ${updated} Helsinki time.`:null,'* Provisional: a GSAx adjustment is pending.'].filter(Boolean).join(' ');
+  return [metadata?.demo?'Preview test data: fictional games.':null,metadata?.error,metadata?.stale?'Update overdue; showing the last verified scores.':null,updated?`Updated ${updated} Helsinki time.`:null,'* Provisional: a GSAx adjustment is pending.'].filter(Boolean).join(' ');
 }
 function gameDate(game){
   const date=new Date(/^\d{4}-\d{2}-\d{2}$/.test(game.date??'')?`${game.date}T12:00:00Z`:game.startTime);
@@ -113,9 +115,16 @@ function gameMatchup(game){
   if(game.opponent)return `${game.team??''} ${game.homeAway==='away'?'@':game.homeAway==='home'?'vs':'·'} ${game.opponent}`.trim();
   return game.team?`${game.team} · Opponent unavailable`:`Game ${game.gameId}`;
 }
+function gameStats(game){
+  const stats=game.stats;
+  if(!stats)return '<span class="game-stats-unavailable">Game stats await a verified refresh.</span>';
+  const fields=Object.hasOwn(stats,'saves')?[['saves','SV','Saves'],['goalsAgainst','GA','Goals against'],['shutouts','SO','Shutouts'],['gsax','GSAx','Goals saved above expected']]:[['goals','G','Goals'],['assists','A','Assists'],['shots','SOG','Shots on goal'],['hits','HIT','Hits'],['blocks','BLK','Blocked shots'],['faceoffWins','FW','Faceoffs won'],['faceoffLosses','FL','Faceoffs lost'],['penaltyMinutes','PIM','Penalty minutes']];
+  const line=fields.map(([key,short,label])=>`<span><abbr title="${label}">${short}</abbr> <b>${stats[key]===null?'Pending':points(stats[key])}</b></span>`).join('');
+  return `<div class="game-statline">${line}</div>`;
+}
 function gameRows(games,{earnedGames=null}={}){
   const earned=earnedGames===null?null:new Set(earnedGames.map(game=>game.gameId));
-  return `<div class="points-table-wrap"><table class="player-points-table"><caption class="sr-only">Game-by-game fantasy points. Dates follow the NHL game date.</caption><thead><tr><th scope="col">DATE</th><th scope="col">MATCHUP</th><th scope="col">FANTASY PTS</th>${earned?'<th scope="col">FOR YOU</th>':''}</tr></thead><tbody>${games.map(game=>`<tr><td><time datetime="${esc(game.startTime)}">${esc(gameDate(game))}</time></td><td>${esc(gameMatchup(game))}</td><td class="${game.points<0?'negative-points':''}"${game.pending?' title="Provisional: GSAx adjustment pending"':''}>${points(game.points)}${game.pending?'*':''}</td>${earned?`<td${earned.has(game.gameId)&&game.points<0?' class="negative-points"':''}>${earned.has(game.gameId)?`${points(game.points)}${game.pending?'*':''}`:'<span class="unearned-points" title="This game did not count for your team">—</span>'}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
+  return `<div class="points-table-wrap"><table class="player-points-table"><caption class="sr-only">Game-by-game stats and fantasy points. Dates follow the NHL game date.</caption><thead><tr><th scope="col">DATE</th><th scope="col">MATCHUP</th><th scope="col">GAME STATS</th><th scope="col">FANTASY PTS</th>${earned?'<th scope="col">FOR YOU</th>':''}</tr></thead><tbody>${games.map(game=>`<tr><td><time datetime="${esc(game.startTime)}">${esc(gameDate(game))}</time></td><td>${esc(gameMatchup(game))}</td><td class="game-stats-cell">${gameStats(game)}</td><td class="${game.points<0?'negative-points':''}"${game.pending?' title="Provisional: GSAx adjustment pending"':''}>${points(game.points)}${game.pending?'*':''}</td>${earned?`<td${earned.has(game.gameId)&&game.points<0?' class="negative-points"':''}>${earned.has(game.gameId)?`${points(game.points)}${game.pending?'*':''}`:'<span class="unearned-points" title="This game did not count for your team">—</span>'}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
 }
 function renderContributions(){
   const section=$('fantasy-contributions'),list=$('contribution-list');
@@ -173,7 +182,7 @@ function setEditing(open){
   else{$('team-sheet').scrollIntoView({behavior:'smooth',block:'start'});$('edit-team').focus({preventScroll:true});}
 }
 function resetAccountView(){
-  editMode=false;replacing=null;$('fantasy-contributions').open=false;$('contribution-list').innerHTML='';
+  editMode=false;replacing=null;expandedLeagueTeams.clear();$('fantasy-contributions').open=false;$('contribution-list').innerHTML='';
 }
 function render(){
   if(viewUserId!==session.user?.id){resetAccountView();viewUserId=session.user?.id;}
@@ -241,14 +250,17 @@ async function confirmTeam(){
 }
 function renderLeague(){
   if(!session.user||!session.entry?.submittedAt){
-    league=[];$('refresh-fantasy').hidden=true;$('fantasy-feed-status').textContent='';
+    league=[];expandedLeagueTeams.clear();$('refresh-fantasy').hidden=true;$('fantasy-feed-status').textContent='';
     $('fantasy-leaderboard').innerHTML=`<div class="market-empty"><strong>Enter your team first.</strong><br>Submit your six players to reveal the Fantasy leaderboard and other teams.<br><button id="unlock-fantasy-league" type="button" class="primary-button">${session.user?'Finish my team ↗':'Choose your players ↗'}</button></div>`;
     $('unlock-fantasy-league').addEventListener('click',()=>{if(session.user){$('team-sheet').scrollIntoView({behavior:'smooth'});$('edit-team').focus({preventScroll:true});}else openAuth('register');});return;
   }
   $('refresh-fantasy').hidden=false;
-  $('fantasy-leaderboard').innerHTML=league.length?`<table class="fantasy-league-table"><thead><tr><th scope="col">RANK</th><th scope="col">MANAGER & TEAM</th><th scope="col">FANTASY PTS</th></tr></thead><tbody>${league.map(e=>`<tr${e.id===session.user?.id?' class="mine"':''}><td>${e.rank??'—'}</td><td><details><summary>${esc(e.displayName)}${e.id===session.user?.id?' · You':''}</summary><div class="league-roster">${e.playerIds.map(id=>{const p=byId.get(id);return `${esc(p?.name??'Player unavailable')} (${esc(p?.position??'')})`;}).join(' · ')}<br>Entered ${new Date(e.submittedAt).toLocaleDateString('en-GB',{timeZone:'Europe/Helsinki',day:'numeric',month:'short'})}. Score includes earlier lineups.</div></details></td><td>${points(e.points)}${e.pending?'*':''}</td></tr>`).join('')}</tbody></table>`:'<div class="market-empty"><strong>The ice is yours.</strong><br>No teams have entered Fantasy yet. Build your six and make the first call.</div>';
+  $('fantasy-leaderboard').innerHTML=league.length?`<table class="fantasy-league-table"><thead><tr><th scope="col">RANK</th><th scope="col">MANAGER & TEAM</th><th scope="col">FANTASY PTS</th></tr></thead><tbody>${league.map(e=>{
+    const open=expandedLeagueTeams.has(e.id),players=e.playerIds.map(id=>byId.get(id)).filter(Boolean);
+    return `<tr${e.id===session.user?.id?' class="mine"':''}><td>${e.rank??'—'}</td><td><button id="league-manager-${e.id}" type="button" class="league-team-toggle" data-manager="${e.id}" aria-expanded="${open}" aria-controls="league-team-${e.id}"><span aria-hidden="true">▸</span>${esc(e.displayName)}${e.id===session.user?.id?' · You':''}</button></td><td>${points(e.points)}${e.pending?'*':''}</td></tr><tr id="league-team-${e.id}" class="team-detail-row"${open?'':' hidden'}><td colspan="3"><div class="league-roster">${renderTeamRink(players)}<p class="league-entry-note">Entered ${new Date(e.submittedAt).toLocaleDateString('en-GB',{timeZone:'Europe/Helsinki',day:'numeric',month:'short'})}. Score includes earlier lineups.</p></div></td></tr>`;
+  }).join('')}</tbody></table>`:'<div class="market-empty"><strong>The ice is yours.</strong><br>No teams have entered Fantasy yet. Build your six and make the first call.</div>';
   const fetched=feed?.fetchedAt?new Date(feed.fetchedAt).toLocaleString('en-GB',{timeZone:'Europe/Helsinki',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):null;
-  $('fantasy-feed-status').textContent=[feed?.error,feed?.modelError,feed?.stale?'Update overdue; showing the last verified scores.':null,fetched?`${feed.gameCount} completed NHL games · Updated ${fetched} Helsinki time.`:null,'NHL statistics · GSAx by MoneyPuck.com · * Provisional GSAx adjustment pending.'].filter(Boolean).join(' ');
+  $('fantasy-feed-status').textContent=feed?.demo?scoreStatus(feed):[feed?.error,feed?.modelError,feed?.stale?'Update overdue; showing the last verified scores.':null,fetched?`${feed.gameCount} completed NHL games · Updated ${fetched} Helsinki time.`:null,'NHL statistics · GSAx by MoneyPuck.com · * Provisional GSAx adjustment pending.'].filter(Boolean).join(' ');
 }
 async function refreshLeague(updateMarket=true){
   if(!session.user||!session.entry?.submittedAt){if(updateMarket)await loadMarket().catch(()=>{});renderLeague();return;}
@@ -312,6 +324,13 @@ $('view-contributions').addEventListener('click',()=>{if(session.user&&session.e
 $('weekly-period').addEventListener('change',()=>{weeklySelection=Object.hasOwn(rankingPeriods,$('weekly-period').value)?$('weekly-period').value:'current';void refreshWeeklyPlayers();});
 $('refresh-weekly').addEventListener('click',()=>void refreshWeeklyPlayers());
 $('weekly-player-list').addEventListener('click',e=>{const button=e.target.closest('[data-games]');if(button)void openGameLog(Number(button.dataset.games));});
+$('fantasy-leaderboard').addEventListener('click',e=>{
+  const log=e.target.closest('[data-games]');if(log){void openGameLog(Number(log.dataset.games));return;}
+  const button=e.target.closest('[data-manager]');if(!button)return;
+  const id=Number(button.dataset.manager);if(!league.some(entry=>entry.id===id))return;
+  if(expandedLeagueTeams.has(id))expandedLeagueTeams.delete(id);else expandedLeagueTeams.add(id);
+  renderLeague();$(`league-manager-${id}`).focus({preventScroll:true});
+});
 $('choose-players').addEventListener('click',()=>openAuth('register'));
 $('save-roster').addEventListener('click',saveDraft);$('submit-roster').addEventListener('click',review);
 $('reload-team').addEventListener('click',()=>{if(editMode&&!busy)void loadMarket().then(()=>personal()).then(()=>toast('Loaded your saved team and current prices.')).catch(e=>toast(e.message));});
@@ -348,6 +367,7 @@ async function boot(){
   }catch{marketError='The Fantasy service could not be reached. Reload this page to reconnect.';loaded=false;render();}
 }
 function receiveMarket(data){catalog=data.players;byId=new Map(catalog.map(p=>[p.id,p]));priceMarket=data.market;
+  $('fantasy-demo-note').hidden=!data.scoring?.demo;
   const asOf=priceMarket?new Date(priceMarket.asOf).toLocaleDateString('en-GB',{timeZone:'Europe/Helsinki',day:'numeric',month:'short'}):'unavailable';
   $('market-price-note').textContent=`Prices as of ${asOf}. ${priceMarket?.overdue?'The weekly update is awaiting verified statistics. ':''}Prices update Mondays at noon Helsinki time: 75% last-season value + 25% current-season full-season pace, limited to ±5% each week. Prices stay unchanged until five appearances; goalies awaiting verified GSAx stay at their previous price.`;
   const roster=data.roster,note=$('market-roster-note');

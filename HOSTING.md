@@ -22,7 +22,7 @@ Transfer and extract the source ZIP into a temporary folder on the laptop. From 
 sudo useradd --system --user-group --home-dir /var/lib/playoff-picks --shell /usr/sbin/nologin playoff-pick
 sudo install -d -m 0755 /opt/playoff-picks
 sudo cp -R dist deployment tests /opt/playoff-picks/
-sudo cp server.mjs accounts.mjs admin.mjs hosting.mjs schedule.mjs standings.mjs fantasy-scoring.mjs fantasy-players.json roster-updates.mjs refresh-roster.mjs fantasy-roster.json player-contracts.json player-values.mjs contract-updates.mjs market-prices.mjs package.json README.md HOSTING.md SECURITY-REVIEW.md /opt/playoff-picks/
+sudo cp ./*.mjs fantasy-players.json fantasy-roster.json player-contracts.json package.json README.md HOSTING.md SECURITY-REVIEW.md /opt/playoff-picks/
 sudo chown -R root:root /opt/playoff-picks
 sudo find /opt/playoff-picks -type d -exec chmod 0755 {} +
 sudo find /opt/playoff-picks -type f -exec chmod 0644 {} +
@@ -186,24 +186,32 @@ Cloudflare configuration. No Git checkout is needed inside `/opt/playoff-picks`.
 ```sh
 (
 set -eu
+
 task_update_dir=$(mktemp -d)
 git clone --branch main --single-branch https://github.com/aleksibm/playoff-picks.git "$task_update_dir"
 cd "$task_update_dir"
-node --test tests/*.test.mjs
+
+/usr/bin/node --test tests/*.test.mjs
+sudo /usr/bin/node --env-file=/etc/playoff-picks.env deployment/check.mjs --production
 
 sudo sh /opt/playoff-picks/deployment/backup.sh
 task_code_backup="/opt/playoff-picks-backup-$(date +%Y%m%d-%H%M%S)"
 sudo cp -a /opt/playoff-picks "$task_code_backup"
 
 sudo systemctl stop playoff-picks
+trap 'sudo systemctl start playoff-picks' EXIT
 sudo cp -R dist deployment tests /opt/playoff-picks/
 sudo cp ./*.mjs fantasy-players.json fantasy-roster.json player-contracts.json package.json README.md HOSTING.md SECURITY-REVIEW.md /opt/playoff-picks/
 sudo chown -R root:root /opt/playoff-picks
 sudo find /opt/playoff-picks -type d -exec chmod 0755 {} +
 sudo find /opt/playoff-picks -type f -exec chmod 0644 {} +
 sudo systemctl start playoff-picks
-sudo systemctl status playoff-picks --no-pager
-printf 'Previous application files: %s\n' "$task_code_backup"
+trap - EXIT
+
+systemctl is-active playoff-picks
+task_public_origin=$(sudo /usr/bin/node --env-file=/etc/playoff-picks.env -p 'process.env.PLAYOFF_PICK_PUBLIC_ORIGIN')
+curl --fail --show-error --retry 5 --retry-delay 2 --retry-connrefused --connect-timeout 10 --max-time 30 "$task_public_origin/api/health"
+printf '\nPrevious application files: %s\n' "$task_code_backup"
 )
 ```
 

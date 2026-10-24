@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { readFileSync } from 'node:fs';
 import * as rules from '../dist/fantasy-rules.js';
+import { renderTeamRink } from '../dist/fantasy-rink.js';
 
-const source=readFileSync(new URL('../dist/fantasy.js',import.meta.url),'utf8').replace(/^import[^\n]+\n/,'');
+const source=readFileSync(new URL('../dist/fantasy.js',import.meta.url),'utf8').replace(/^import[^\n]+\n/gm,'');
 const page=readFileSync(new URL('../dist/fantasy.html',import.meta.url),'utf8');
 const lineup=[1,2,3,4,5,6];
 const players=Array.from({length:7},(_,i)=>({id:i+1,name:`Player ${i+1}`,position:['LW','C','RW','D','D','G','C'][i],team:'COL',price:1_000_000,lastPoints:100,games:80,seasonPoints:10}));
@@ -63,7 +64,7 @@ async function dashboard({session=guest,route}={}){
   elements.get('player-sort').value='value-desc';
   if(elements.has('weekly-period'))elements.get('weekly-period').value='current';
   const context=vm.createContext({
-    ...rules,Map,Set,AbortSignal,URL,URLSearchParams,console,
+    ...rules,renderTeamRink,Map,Set,AbortSignal,URL,URLSearchParams,console,
     setTimeout(){return 1;},clearTimeout(){},setInterval(){},
     document:{hidden:false,getElementById:id=>elements.get(id),querySelector:()=>nav,querySelectorAll:()=>[],addEventListener:(name,callback)=>listeners.set(name,callback)},
     window:{addEventListener(){}},
@@ -273,4 +274,50 @@ test('player availability refresh errors are shown as text while the last verifi
   const note=b.elements.get('market-roster-note');
   assert.equal(note.hidden,false);assert.match(note.textContent,/update overdue/);assert.match(note.textContent,/Roster service unavailable/);assert.equal(note.innerHTML,'');
   await b.fire('edit-team');assert.match(b.elements.get('player-list').innerHTML,/Player 7/);
+});
+
+test('league managers expand into full-width positional rinks and their game logs remain available',async()=>{
+  const entries=[{id:1,displayName:'Fan1',playerIds:lineup,rank:1,points:14,submittedAt:'2026-10-10T17:00:00Z'},{id:2,displayName:'Other <manager>',playerIds:[7,2,3,4,5,6],rank:2,points:10,submittedAt:'2026-10-10T17:00:00Z'}];
+  const b=await dashboard({session:account(),route:path=>{
+    if(path==='/api/fantasy/leaderboard')return response({locked:false,entries,scoring});
+    if(path==='/api/fantasy/players/7/games')return response({games:[],seasonPoints:0,scoring});
+  }});
+  assert.match(b.elements.get('fantasy-leaderboard').innerHTML,/Other &lt;manager&gt;/);
+  assert.match(b.elements.get('fantasy-leaderboard').innerHTML,/id="league-team-2" class="team-detail-row" hidden/);
+  await b.fire('fantasy-leaderboard','click',{target:target({manager:'2'})});
+  const html=b.elements.get('fantasy-leaderboard').innerHTML;
+  assert.match(html,/id="league-team-2" class="team-detail-row"><td colspan="3">/);
+  assert.match(html,/aria-expanded="true" aria-controls="league-team-2"/);
+  assert.match(html,/class="rink-scene"/);assert.match(html,/Player 7/);
+  await b.fire('fantasy-leaderboard','click',{target:target({games:'7'})});
+  assert.equal(b.elements.get('player-games-dialog').open,true);assert.equal(b.elements.get('player-games-title').textContent,'Player 7');
+  await b.fire('fantasy-leaderboard','click',{target:target({manager:'2'})});
+  assert.match(b.elements.get('fantasy-leaderboard').innerHTML,/id="league-team-2" class="team-detail-row" hidden/);
+});
+
+test('game logs display compact stats and total points without an expandable scoring breakdown',async()=>{
+  const total=5+20/3+.75+5;
+  const game={gameId:2026020001,date:'2026-10-20',startTime:'2026-10-20T18:00:00Z',team:'COL',opponent:'DAL',points:total,pending:false,stats:{goals:1,assists:2,shots:3,hits:0,blocks:0,faceoffWins:0,faceoffLosses:0,penaltyMinutes:0,defenseMultiplier:1},breakdown:[{key:'goals',label:'Goals <unsafe>',value:1,points:5},{key:'assists',label:'Assists',value:2,points:20/3},{key:'shots',label:'Shots',value:3,points:.75},{key:'win',label:'Team win',value:true,points:5}]};
+  const legacy={...game,gameId:2026020002,stats:null,breakdown:null,points:4};
+  const user=account();user.score={points:total,pending:false,players:{1:total},playerGames:{1:[game]}};
+  const b=await dashboard({session:user,route:path=>path==='/api/fantasy/players/1/games'?response({games:[game,legacy],seasonPoints:total+4,scoring}):undefined});
+  await b.fire('weekly-player-list','click',{target:target({games:'1'})});
+  const html=b.elements.get('player-games-content').innerHTML;
+  assert.match(html,/GAME STATS/);assert.match(html,/title="Goals">G<\/abbr> <b>1<\/b>/);assert.match(html,/title="Assists">A<\/abbr> <b>2<\/b>/);
+  assert.doesNotMatch(html,/How the points add up|game-breakdown|Game total|<unsafe>/);assert.match(html,/17\.42/);
+  assert.match(html,/Game stats await a verified refresh/);assert.match(html,/FOR YOU/);
+});
+
+test('pending goalie adjustments stay visibly pending and demo snapshots are clearly labeled',async()=>{
+  const demoScoring={...scoring,demo:true};
+  const game={gameId:2026020001,date:'2026-10-20',startTime:'2026-10-20T18:00:00Z',team:'COL',opponent:'DAL',points:6.25,pending:true,stats:{saves:28,goalsAgainst:3,shutouts:0,gsax:null},breakdown:[{key:'saves',label:'Saves',value:28,points:17.5},{key:'against',label:'Goals conceded',value:3,points:-11.25},{key:'gsax',label:'Goals saved above expected',value:null,points:null,pending:true}]};
+  const b=await dashboard({session:account(),route:path=>{
+    if(path==='/api/fantasy/players')return response({players,market,scoring:demoScoring});
+    if(path==='/api/fantasy/players/6/games')return response({games:[game],seasonPoints:6.25,scoring:demoScoring});
+  }});
+  assert.equal(b.elements.get('fantasy-demo-note').hidden,false);
+  await b.fire('roster-slots','click',{target:target({games:'6'})});
+  const html=b.elements.get('player-games-content').innerHTML;
+  assert.match(html,/title="Saves">SV<\/abbr> <b>28<\/b>/);assert.match(html,/Pending/);assert.match(html,/6\.25\*/);
+  assert.match(b.elements.get('player-games-status').textContent,/Preview test data/);
 });

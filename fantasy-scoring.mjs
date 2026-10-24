@@ -9,6 +9,38 @@ const count=(x,label)=>{if(!Number.isSafeInteger(x)||x<0)throw new Error(`Invali
 const n=(x)=>x??0;
 const key=r=>`${r.gameId}:${r.playerId}`;
 const index=rows=>new Map(rows.map(r=>[key(r),r]));
+// Compact tuples keep a full-season ledger comfortably inside the cache limit.
+// Human-readable stat names and score explanations are expanded only for logs.
+const commonStats=['goals','assists','powerPlayGoals','powerPlayAssists','gameWinningGoals','gameWinningPowerPlayGoals','teamWin','penaltyMinutes','minorPenalties','majorPenalties','misconductPenalties'];
+const detailFields={skater:[...commonStats,'shots','hits','blocks','takeaways','faceoffWins','faceoffLosses','defenseMultiplier'],goalie:[...commonStats,'saves','shotsAgainst','goalsAgainst','shutouts','gsax']};
+function packedDetails(kind,stats){return {kind,stats:detailFields[kind].map(field=>stats[field])};}
+function expandedDetails(detail){
+  if(!detail)return {stats:null,breakdown:null};
+  const stats=Object.fromEntries(detailFields[detail.kind].map((field,i)=>[field,detail.stats[i]])),breakdown=[];
+  const add=(key,label,value,points)=>breakdown.push({key,label,value,points});
+  const mult=detail.kind==='skater'?stats.defenseMultiplier:1;
+  add('goals','Goals outside power play',stats.goals-stats.powerPlayGoals,(stats.goals-stats.powerPlayGoals)*5*mult);
+  add('powerPlayGoals','Power-play goals',stats.powerPlayGoals,stats.powerPlayGoals*10/3*mult);
+  add('assists','Assists outside power play',stats.assists-stats.powerPlayAssists,(stats.assists-stats.powerPlayAssists)*10/3*mult);
+  add('powerPlayAssists','Power-play assists',stats.powerPlayAssists,stats.powerPlayAssists*20/9*mult);
+  add('gameWinningGoals','Game-winning goal bonus',stats.gameWinningGoals,(stats.gameWinningGoals*(6.25-5)+stats.gameWinningPowerPlayGoals*(5-10/3))*mult);
+  if(detail.kind==='skater'){
+    for(const [key,label] of [['shots','Shots'],['hits','Hits'],['blocks','Blocked shots'],['takeaways','Takeaways']])add(key,label,stats[key],stats[key]*.25);
+    add('faceoffWins','Faceoffs won',stats.faceoffWins,stats.faceoffWins);
+    add('faceoffLosses','Faceoffs lost',stats.faceoffLosses,-stats.faceoffLosses);
+  }else{
+    add('saves','Saves',stats.saves,stats.saves*.625);
+    add('shutouts','Shutout save bonus',stats.shutouts,stats.shutouts?stats.saves*.625*.5:0);
+    add('goalsAgainst','Goals conceded',stats.goalsAgainst,-stats.goalsAgainst*3.75);
+    if(stats.gsax===null)breakdown.push({key:'gsax',label:'Goals saved above expected',value:null,points:null,pending:true});
+    else add('gsax','Goals saved above expected',stats.gsax,stats.gsax*5);
+  }
+  add('teamWin','Team win',stats.teamWin?1:0,stats.teamWin?5:0);
+  add('minorPenalties','Minor / double-minor penalties',stats.minorPenalties,-stats.minorPenalties*5/3);
+  add('majorPenalties','Major penalties',stats.majorPenalties,-stats.majorPenalties*10/3);
+  add('misconductPenalties','Misconduct / match penalties',stats.misconductPenalties,-stats.misconductPenalties*5);
+  return {stats,breakdown};
+}
 export function powerPlay(play,homeId) {
   if(!/^\d{4}$/.test(play.situationCode))throw new Error('Missing manpower information.');
   const [ag,as,hs,hg]=[...play.situationCode].map(Number);
@@ -95,15 +127,31 @@ export function scoreGame({pbp,skaters,goalies,realtime,faceoffs,model}) {
     if(row&&row.ppGoals===row.goals)return true;
     return powerPlay(play,home.id);
   }
-  const penalties=new Map(),offense=new Map();
+  const penalties=new Map(),offense=new Map(),events=new Map();
   const add=(map,id,value)=>map.set(id,(map.get(id)??0)+value);
-  for(const p of pbp.plays)if(p.typeDescKey==='penalty')add(penalties,p.details.committedByPlayerId,penaltyScore(p.details));
+  function eventStats(id){
+    if(!events.has(id))events.set(id,Object.fromEntries(commonStats.map(field=>[field,0])));
+    return events.get(id);
+  }
+  for(const p of pbp.plays)if(p.typeDescKey==='penalty'){
+    const d=p.details,value=penaltyScore(d);add(penalties,d.committedByPlayerId,value);
+    if(d.committedByPlayerId){
+      const stats=eventStats(d.committedByPlayerId);stats.penaltyMinutes+=count(d.duration,'penalty minutes');
+      if(value===-5)stats.misconductPenalties++;
+      else if(value===-10/3)stats.majorPenalties++;
+      else if(value===-5/3)stats.minorPenalties++;
+    }
+  }
   for(const p of goals){
     const pp=goalIsPP(p),d=p.details;
     add(offense,d.scoringPlayerId,p===gw?6.25:pp?10/3:5);
-    for(const aid of [d.assist1PlayerId,d.assist2PlayerId])if(aid)add(offense,aid,pp?20/9:10/3);
+    const scorer=eventStats(d.scoringPlayerId);scorer.goals++;if(pp)scorer.powerPlayGoals++;
+    if(p===gw){scorer.gameWinningGoals++;if(pp)scorer.gameWinningPowerPlayGoals++;}
+    for(const aid of [d.assist1PlayerId,d.assist2PlayerId])if(aid){
+      add(offense,aid,pp?20/9:10/3);const assistant=eventStats(aid);assistant.assists++;if(pp)assistant.powerPlayAssists++;
+    }
   }
-  const scores={},pending=[],teams={};
+  const scores={},pending=[],teams={},details={};
   for(const r of skaters){
     const rt=realtime.get(key(r)),fo=faceoffs.get(key(r));
     if(!rt||!fo)throw new Error('Incomplete skater game reports.');
@@ -120,6 +168,9 @@ export function scoreGame({pbp,skaters,goalies,realtime,faceoffs,model}) {
     const win=(r.homeRoad==='H')===homeWon?5:0;
     scores[r.playerId]=attack*mult+count(fo.totalFaceoffWins,'faceoff wins')-count(fo.totalFaceoffLosses,'faceoff losses')+peripherals+win+(penalties.get(r.playerId)??0);
     teams[r.playerId]=r.teamAbbrev;
+    details[r.playerId]=packedDetails('skater',{...eventStats(r.playerId),goals:r.goals,assists:r.assists,powerPlayGoals:ppg,powerPlayAssists:ppa,
+      gameWinningGoals:r.gameWinningGoals??0,teamWin:win>0,shots:r.shots,hits:rt.hits,blocks:rt.blockedShots,takeaways:rt.takeaways,
+      faceoffWins:fo.totalFaceoffWins,faceoffLosses:fo.totalFaceoffLosses,defenseMultiplier:mult});
   }
   for(const r of goalies){
     const gsax=model.get(key(r));
@@ -130,8 +181,10 @@ export function scoreGame({pbp,skaters,goalies,realtime,faceoffs,model}) {
     const win=(r.homeRoad==='H')===homeWon?5:0;
     scores[r.playerId]=saves-count(r.goalsAgainst,'goals conceded')*3.75+(gsax?.gsax??0)*5+win+(offense.get(r.playerId)??0)+(penalties.get(r.playerId)??0);
     teams[r.playerId]=r.teamAbbrev;
+    details[r.playerId]=packedDetails('goalie',{...eventStats(r.playerId),teamWin:win>0,saves:r.saves,shotsAgainst:r.shotsAgainst,
+      goalsAgainst:r.goalsAgainst,shutouts:r.shutouts??0,gsax:gsax?.gsax??(r.shotsAgainst===0?0:null)});
   }
-  return {id:pbp.id,startTime:pbp.startTimeUTC,date:pbp.gameDate,homeTeam:home.abbrev??null,awayTeam:away.abbrev??null,scores,pending,teams};
+  return {id:pbp.id,startTime:pbp.startTimeUTC,date:pbp.gameDate,homeTeam:home.abbrev??null,awayTeam:away.abbrev??null,scores,pending,teams,details};
 }
 
 export function validateFantasySnapshot(snapshot) {
@@ -143,6 +196,25 @@ export function validateFantasySnapshot(snapshot) {
     if(Object.values(g.scores).some(x=>!Number.isFinite(x)||Math.abs(x)>1000))throw new Error('Invalid fantasy score.');
     if(g.pending.some(id=>!Number.isSafeInteger(id)||!Object.hasOwn(g.scores,id)))throw new Error('Invalid pending score.');
     if([g.homeTeam,g.awayTeam].some(team=>team!=null&&(typeof team!=='string'||!/^[A-Z]{2,4}$/.test(team))))throw new Error('Invalid fantasy matchup.');
+    if(Object.hasOwn(g,'details')){
+      if(!record(g.details)||Object.keys(g.details).length!==Object.keys(g.scores).length||Object.keys(g.details).length>80||new Set(g.pending).size!==g.pending.length)throw new Error('Invalid fantasy game details.');
+      for(const [id,detail] of Object.entries(g.details)){
+        if(!/^[1-9]\d*$/.test(id)||!Number.isSafeInteger(Number(id))||!Object.hasOwn(g.scores,id)||!record(detail)||Object.keys(detail).length!==2||!Object.hasOwn(detail,'kind')||!Object.hasOwn(detail,'stats')||!Object.hasOwn(detailFields,detail.kind)||!Array.isArray(detail.stats)||detail.stats.length!==detailFields[detail.kind].length)throw new Error('Invalid fantasy player details.');
+        const {stats,breakdown}=expandedDetails(detail);
+        for(const [field,value] of Object.entries(stats)){
+          if(field==='teamWin'){if(typeof value!=='boolean')throw new Error('Invalid fantasy win detail.');}
+          else if(field==='defenseMultiplier'){if(value!==1&&value!==1.5)throw new Error('Invalid fantasy defense multiplier.');}
+          else if(field==='gsax'){if(value!==null&&(!Number.isFinite(value)||Math.abs(value)>100))throw new Error('Invalid fantasy GSAx detail.');}
+          else if(!Number.isSafeInteger(value)||value<0||value>200)throw new Error('Invalid fantasy stat count.');
+        }
+        if(stats.powerPlayGoals>stats.goals||stats.powerPlayAssists>stats.assists||stats.gameWinningGoals>1||stats.gameWinningGoals>stats.goals||stats.gameWinningPowerPlayGoals>stats.gameWinningGoals||stats.gameWinningPowerPlayGoals>stats.powerPlayGoals)throw new Error('Inconsistent fantasy scoring details.');
+        const isPending=detail.kind==='goalie'&&stats.gsax===null;
+        if(isPending!==g.pending.includes(Number(id)))throw new Error('Inconsistent fantasy provisional details.');
+        if(detail.kind==='goalie'&&(stats.saves+stats.goalsAgainst!==stats.shotsAgainst||stats.shutouts>1||(stats.shutouts&&stats.goalsAgainst!==0)||(isPending&&stats.shotsAgainst===0)))throw new Error('Inconsistent fantasy goalie details.');
+        const total=breakdown.reduce((sum,component)=>sum+(component.points??0),0);
+        if(!Number.isFinite(total)||Math.abs(total-g.scores[id])>1e-7)throw new Error('Fantasy score details do not add up.');
+      }
+    }
   }
   return snapshot;
 }
@@ -153,7 +225,7 @@ function playerGame(g,id){
   const opponents=[...new Set(Object.values(g.teams??{}))].filter(value=>value!==team);
   const opponent=homeAway==='home'?g.awayTeam:homeAway==='away'?g.homeTeam:team&&opponents.length===1?opponents[0]:null;
   return {gameId:g.id,startTime:g.startTime,date:g.date??g.startTime.slice(0,10),team,opponent:opponent??null,homeAway,
-    points:g.scores[id],pending:g.pending.includes(id)};
+    points:g.scores[id],pending:g.pending.includes(id),...expandedDetails(g.details?.[id])};
 }
 
 /** All completed appearances, regardless of whether a manager owned the player. */
