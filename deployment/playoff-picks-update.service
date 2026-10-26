@@ -1,0 +1,17 @@
+[Unit]
+Description=Check GitHub and update Playoff Pick when a new commit is available
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+WorkingDirectory=/opt/playoff-picks
+Environment=HOME=/root
+Environment=GIT_TERMINAL_PROMPT=0
+Environment=GH_PROMPT_DISABLED=1
+ExecStart=/bin/sh /opt/playoff-picks/deployment/update.sh --if-new
+TimeoutStartSec=15min
+UMask=0077
+PrivateTmp=true

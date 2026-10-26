@@ -1,0 +1,10 @@
+[Unit]
+Description=Check for Playoff Pick updates every Monday at 13:00 Helsinki time
+
+[Timer]
+OnCalendar=Mon *-*-* 13:00:00 Europe/Helsinki
+Persistent=true
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

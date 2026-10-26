@@ -204,6 +204,49 @@ sudo sh "$task_update_dir/deployment/update.sh"
 An optional full commit SHA pins an update to the reviewed version of `main`:
 `sudo sh /opt/playoff-picks/deployment/update.sh COMMIT_SHA`.
 
+### Weekly automatic GitHub updates
+
+Enable a server timer that checks GitHub `main` every **Monday at 13:00
+Europe/Helsinki**, including daylight saving changes:
+
+```sh
+sudo sh /opt/playoff-picks/deployment/enable-weekly-updates.sh
+```
+
+For an installation that does not yet contain that script, clone the latest
+release first and run its installer:
+
+```sh
+task_update_dir=$(mktemp -d)
+git clone --branch main --single-branch https://github.com/aleksibm/playoff-picks.git "$task_update_dir"
+sudo sh "$task_update_dir/deployment/enable-weekly-updates.sh"
+```
+
+The installer verifies an unattended GitHub check as root before enabling the
+timer. GitHub CLI browser authentication, when needed, must therefore be set up
+for root with `sudo gh auth login --hostname github.com --git-protocol https --web`
+and `sudo gh auth setup-git --hostname github.com`.
+
+An unchanged commit causes no backup, application restart, or score refresh. A
+new commit goes through the normal tests, preflight, backup, install, refresh,
+and health check. Failed downloads or tests leave the running app untouched.
+If the server is off at the scheduled time, the persistent timer checks when it
+next starts. The timer uses the server's own systemd service.
+
+Inspect or run the check manually with:
+
+```sh
+systemctl list-timers playoff-picks-update.timer --no-pager
+sudo journalctl -u playoff-picks-update.service -n 50 --no-pager
+sudo systemctl start playoff-picks-update.service
+```
+
+Disable future scheduled checks with
+`sudo systemctl disable --now playoff-picks-update.timer`.
+Later app updates preserve timer enablement and administrator drop-in overrides.
+
+### Manual update procedure
+
 The manual procedure below remains available for older installations.
 
 For the systemd installation above, run the following on the hosting laptop. Git
