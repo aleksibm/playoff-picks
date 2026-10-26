@@ -78,6 +78,18 @@ test('shutout save bonus and verified zero-shot appearances are explained accura
   assert.equal(zero.pending,false);assert.equal(zero.stats.gsax,0);assert.equal(component(zero,'gsax').points,0);
 });
 
+test('official goalie scoring counts survive inconsistent shot totals without changing points',()=>{
+  const input=fixture();
+  // NHL's Jarry report and boxscore for 2026020176 both publish these counts.
+  input.goalies=[{...input.goalies[1],saves:25,goalsAgainst:6,shotsAgainst:30}];
+  input.model=new Map([[`${input.pbp.id}:7`,{gsax:-1.25,goals:6}]]);
+  const feed=snapshot([scoreGame(input)]);
+  validateFantasySnapshot(feed);
+  const game=playerGameLogs(feed,7)[0];
+  assert.equal(game.stats.saves,25);assert.equal(game.stats.goalsAgainst,6);assert.equal(game.stats.shotsAgainst,30);
+  close(game.points,25*.625-6*3.75-1.25*5);close(sum(game),game.points);
+});
+
 test('counted contribution games expose the same details and legacy caches explicitly have no details',()=>{
   const current=scoreGame(fixture()),legacy=structuredClone(current);delete legacy.details;legacy.id++;
   const feed=snapshot([current,legacy]);validateFantasySnapshot(feed);
@@ -95,7 +107,7 @@ test('snapshot validation rejects malformed, contradictory and forged detail tup
     g=>{g.details[1].stats[6]=1;},g=>{g.details[1].stats[17]=2;},g=>{g.details[1].stats[2]=3;},
     g=>{g.details[1].stats[4]=2;},g=>{g.details[1].stats[5]=1;},g=>{g.scores[1]+=1;},
     g=>{g.details[6].stats[15]=NaN;},g=>{g.details[6].stats[15]=101;},g=>{g.details[6].stats[15]=false;},
-    g=>{g.details[6].stats[12]=30;},g=>{g.details[6].stats[14]=1;},
+    g=>{g.details[6].stats[12]=29;},g=>{g.details[6].stats[14]=1;},
     g=>{g.pending=[];},g=>{g.pending.push(1);},g=>{g.pending.push(7);},g=>{g.details[1].breakdown=[];},
     g=>{delete g.details[1];},g=>{g.details[999]=g.details[1];delete g.details[1];},
   ];

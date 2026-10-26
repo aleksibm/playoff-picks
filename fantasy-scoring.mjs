@@ -210,7 +210,10 @@ export function validateFantasySnapshot(snapshot) {
         if(stats.powerPlayGoals>stats.goals||stats.powerPlayAssists>stats.assists||stats.gameWinningGoals>1||stats.gameWinningGoals>stats.goals||stats.gameWinningPowerPlayGoals>stats.gameWinningGoals||stats.gameWinningPowerPlayGoals>stats.powerPlayGoals)throw new Error('Inconsistent fantasy scoring details.');
         const isPending=detail.kind==='goalie'&&stats.gsax===null;
         if(isPending!==g.pending.includes(Number(id)))throw new Error('Inconsistent fantasy provisional details.');
-        if(detail.kind==='goalie'&&(stats.saves+stats.goalsAgainst!==stats.shotsAgainst||stats.shutouts>1||(stats.shutouts&&stats.goalsAgainst!==0)||(isPending&&stats.shotsAgainst===0)))throw new Error('Inconsistent fantasy goalie details.');
+        // NHL reports can disagree on shots versus saves + goals against, even
+        // across both official feeds. Keep the published scoring counts rather
+        // than rejecting every game's update or deriving saves from shots.
+        if(detail.kind==='goalie'&&(stats.saves>stats.shotsAgainst||stats.shutouts>1||(stats.shutouts&&stats.goalsAgainst!==0)||(isPending&&stats.shotsAgainst===0)))throw new Error('Inconsistent fantasy goalie details.');
         const total=breakdown.reduce((sum,component)=>sum+(component.points??0),0);
         if(!Number.isFinite(total)||Math.abs(total-g.scores[id])>1e-7)throw new Error('Fantasy score details do not add up.');
       }
@@ -356,12 +359,16 @@ export async function fetchFantasySnapshot({fetchImpl=fetch,now=Date.now(),cache
     if(path&&existsSync(path)){
       try{const saved=JSON.parse(readFileSync(path,'utf8'));if(now-Date.parse(saved.gameDate)>7*86400000)pbp=saved;}catch{/* Replace a corrupt event cache. */}
     }
-    if(!pbp){
-      pbp=JSON.parse((await bytes(`https://api-web.nhle.com/v1/gamecenter/${id}/play-by-play`,2*1024*1024)).toString('utf8'));
-      if(path&&['OFF','FINAL'].includes(pbp.gameState)){const temp=`${path}.tmp`;writeFileSync(temp,JSON.stringify(pbp),{mode:0o600});renameSync(temp,path);}
-    }
     if(!sk.has(id)||!gl.has(id))throw new Error('Missing fantasy game appearances.');
-    return scoreGame({pbp,skaters:sk.get(id),goalies:gl.get(id),realtime:rt,faceoffs:fo,model});
+    const score=()=>scoreGame({pbp,skaters:sk.get(id),goalies:gl.get(id),realtime:rt,faceoffs:fo,model});
+    if(pbp){
+      try{return score();}
+      catch{/* Official stat corrections can outlive the seven-day event cache. */}
+    }
+    pbp=JSON.parse((await bytes(`https://api-web.nhle.com/v1/gamecenter/${id}/play-by-play`,2*1024*1024)).toString('utf8'));
+    const game=score();
+    if(path){const temp=`${path}.tmp`;writeFileSync(temp,JSON.stringify(pbp),{mode:0o600});renameSync(temp,path);}
+    return game;
   });
   return validateFantasySnapshot({season:FANTASY_SEASON,fetchedAt:new Date(now).toISOString(),games,modelError});
 }

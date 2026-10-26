@@ -176,6 +176,36 @@ Keep encrypted backups on a separate device. They contain password hashes and se
 
 ## Update an existing installation from GitHub
 
+Once `deployment/update.sh` is installed, run this on the hosting laptop for
+each later update:
+
+```sh
+sudo sh /opt/playoff-picks/deployment/update.sh
+```
+
+The updater downloads GitHub `main`, runs the tests and production preflight,
+backs up private data and application files, installs the release, refreshes
+fantasy scores under the service account, and restarts and health-checks the
+site. It preserves `/var/lib/playoff-picks`, `/etc/playoff-picks.env`, and the
+Cloudflare configuration. It reports the installed commit and backup path;
+the commit is also recorded in `/opt/playoff-picks/deployment/release.txt`.
+Updates are serialized, and a failed score refresh preserves the previous
+verified cache and returns an error after restarting the service.
+
+To install the updater for the first time, or download its latest version
+before updating, use:
+
+```sh
+task_update_dir=$(mktemp -d)
+git clone --branch main --single-branch https://github.com/aleksibm/playoff-picks.git "$task_update_dir"
+sudo sh "$task_update_dir/deployment/update.sh"
+```
+
+An optional full commit SHA pins an update to the reviewed version of `main`:
+`sudo sh /opt/playoff-picks/deployment/update.sh COMMIT_SHA`.
+
+The manual procedure below remains available for older installations.
+
 For the systemd installation above, run the following on the hosting laptop. Git
 and Node.js 24 must already be installed, and your normal user must have read
 access to the GitHub repository. The commands download the current `main` branch
