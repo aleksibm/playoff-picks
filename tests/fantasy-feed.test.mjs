@@ -45,7 +45,7 @@ test('an official assist correction refreshes an old cached game and keeps the c
   assert.equal(f.eventReads(),1);
   assert.equal(snapshot.games.length,1);
   assert.equal(playerGameLogs(snapshot,2)[0].stats.assists,1);
-  assert.equal(snapshot.games[0].scores[2],10);
+  assert.equal(snapshot.games[0].scores[2],12);
   assert.deepEqual(JSON.parse(readFileSync(f.path,'utf8')),f.current);
   const again=await fetchFantasySnapshot(f);
   assert.equal(f.eventReads(),1);

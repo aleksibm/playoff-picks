@@ -9,11 +9,12 @@ import { TEAMS } from './dist/game.js';
 import { UPDATE_TIME_ZONE, UPDATE_TIME, previousDailyUpdate, createDailyScheduler } from './schedule.mjs';
 import { TARGET_SEASON, fetchStandings, scorePrediction, rankEntries } from './standings.mjs';
 import { hostingConfig, requestContext, createRateLimiter } from './hosting.mjs';
-import { fetchFantasySnapshot, validateFantasySnapshot, scoreFantasyHistory, playerGameLogs, weeklyTopPlayers } from './fantasy-scoring.mjs';
+import { fetchFantasySnapshot, validateFantasySnapshot, upgradeFantasySnapshot, scoreFantasyHistory, playerGameLogs, fantasyWeek, weeklyTopPlayers } from './fantasy-scoring.mjs';
+import { FANTASY_RATES } from './fantasy-rates.mjs';
 import { FANTASY_SEASON, BUDGET } from './dist/fantasy-rules.js';
 import { buildPlayerValues } from './player-values.mjs';
 import { createContractUpdater, fetchContractSnapshot } from './contract-updates.mjs';
-import { MINIMUM_PLAYER_PRICE, applyMinimumPrice, initialMarket, reconcileMarket, pricedPlayers, updateWeeklyPrices, previousPriceUpdate, nextPriceUpdate } from './market-prices.mjs';
+import { MINIMUM_PLAYER_PRICE, applyMinimumPrice, initialMarket, reconcileMarket, pricedPlayers, playerPriceChange, updateWeeklyPrices, previousPriceUpdate, nextPriceUpdate } from './market-prices.mjs';
 import { fetchRosterSnapshot, validateRosterSnapshot, mergeRosterCatalog } from './roster-updates.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -231,7 +232,7 @@ export function createApp(options = {}) {
     save:state=>{if(contractCachePath)saveSnapshot(contractCachePath,state);}});
 
   if(fantasyCachePath&&existsSync(fantasyCachePath)){
-    try{if(statSync(fantasyCachePath).size>16*1024*1024)throw new Error('Oversized fantasy cache');fantasySnapshot=validateFantasySnapshot(JSON.parse(readFileSync(fantasyCachePath,'utf8')));}
+    try{if(statSync(fantasyCachePath).size>16*1024*1024)throw new Error('Oversized fantasy cache');const saved=JSON.parse(readFileSync(fantasyCachePath,'utf8')),upgraded=upgradeFantasySnapshot(saved);if(upgraded!==saved)saveSnapshot(fantasyCachePath,upgraded);fantasySnapshot=upgraded;}
     catch{fantasyError='Saved fantasy scores could not be verified. Awaiting an update.';}
   }
 
@@ -272,7 +273,7 @@ export function createApp(options = {}) {
     if(closed||!canRefreshFantasy)return fantasyMetadata();
     if(fantasyRefreshing)return fantasyRefreshing;
     fantasyRefreshing=(async()=>{
-      try{const next=validateFantasySnapshot(await fantasyProvider());if(closed)return fantasyMetadata();if(fantasyCachePath)saveSnapshot(fantasyCachePath,next);fantasySnapshot=next;fantasyError=null;refreshMarket();}
+      try{const next={...validateFantasySnapshot(await fantasyProvider()),scoringVersion:FANTASY_RATES.version};if(closed)return fantasyMetadata();if(fantasyCachePath)saveSnapshot(fantasyCachePath,next);fantasySnapshot=next;fantasyError=null;refreshMarket();}
       catch{fantasyError=fantasySnapshot?'Fantasy scores use the last verified update because the latest refresh failed.':'Fantasy statistics could not be verified. Scores will appear after a successful update.';}
       return fantasyMetadata();
     })();
@@ -378,8 +379,15 @@ export function createApp(options = {}) {
         const player=fantasyCatalog.players.find(p=>p.id===Number(playerGamesPath[1]));
         if(!player)throw failure(404,'This player was not found.');
         const games=playerGameLogs(fantasySnapshot,player.id);
-        return json(response,200,{season:FANTASY_SEASON,player:{id:player.id,name:player.name,position:player.position,team:games[0]?.team??player.team},
-          games,seasonPoints:fantasySnapshot?games.reduce((total,game)=>total+game.points,0):null,scoring:fantasyMetadata()});
+        const week=fantasyWeek(now(),'previous'),start=Date.parse(week.start),end=Date.parse(week.end);
+        const weeklyGames=games.filter(game=>{const time=Date.parse(game.startTime);return time>=start&&time<end;});
+        const knownStats=Boolean(fantasySnapshot)&&weeklyGames.every(game=>game.stats);
+        const lastWeek={...week,games:fantasySnapshot?weeklyGames.length:null,
+          nhlPoints:knownStats?weeklyGames.reduce((sum,game)=>sum+game.stats.goals+game.stats.assists,0):null,
+          fantasyPoints:fantasySnapshot?weeklyGames.reduce((sum,game)=>sum+game.points,0):null,
+          pending:weeklyGames.some(game=>game.pending)};
+        return json(response,200,{season:FANTASY_SEASON,player:{id:player.id,name:player.name,position:player.position,team:games[0]?.team??player.team,price:market.prices[player.id]},
+          priceChange:playerPriceChange(market,player.id),lastWeek,games,seasonPoints:fantasySnapshot?games.reduce((total,game)=>total+game.points,0):null,scoring:fantasyMetadata()});
       }
       if(path==='/api/fantasy/leaderboard'&&request.method==='GET'){
         const viewer=store.getSession(cookieToken(request,hosting.cookieName));

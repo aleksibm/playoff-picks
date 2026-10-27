@@ -308,6 +308,40 @@ test('game logs display compact stats and total points without an expandable sco
   assert.match(html,/Game stats await a verified refresh/);assert.match(html,/FOR YOU/);
 });
 
+test('player popups show signed weekly dollar and percentage changes, including unchanged and unavailable prices',async()=>{
+  for(const [amount,percent,label,className] of [[50_000,5,'+$50,000','positive-value'],[-50_000,-5,'-$50,000','negative-points'],[0,0,'$0','']]){
+    const b=await dashboard({route:path=>path==='/api/fantasy/players/1/games'?response({player:{...players[0],price:1_000_000+amount},games:[],seasonPoints:0,priceChange:{amount,percent},scoring}):undefined});
+    await b.fire('weekly-player-list','click',{target:target({games:'1'})});
+    const html=b.elements.get('player-games-summary').innerHTML;
+    assert.ok(html.includes(label));assert.ok(html.includes(`${percent>0?'+':''}${percent.toFixed(2)}%`));
+    assert.match(html,/CURRENT VALUE/);assert.match(html,/WEEKLY VALUE CHANGE/);
+    if(className)assert.ok(html.includes(className));
+    assert.doesNotMatch(html,/Available after/);
+  }
+  const b=await dashboard({route:path=>path==='/api/fantasy/players/1/games'?response({player:players[0],games:[],seasonPoints:0,priceChange:null,scoring}):undefined});
+  await b.fire('weekly-player-list','click',{target:target({games:'1'})});
+  assert.match(b.elements.get('player-games-summary').innerHTML,/Available after the next weekly update/);
+  assert.doesNotMatch(b.elements.get('player-games-summary').innerHTML,/0\.00%/);
+});
+
+test('player popups distinguish last-week NHL and fantasy points, show Helsinki dates, and preserve provisional negative totals',async()=>{
+  const lastWeek={start:'2026-10-18T21:00:00Z',end:'2026-10-25T22:00:00Z',nhlPoints:4,fantasyPoints:41,pending:false};
+  const b=await dashboard({route:path=>path==='/api/fantasy/players/1/games'?response({games:[],seasonPoints:80,lastWeek,scoring}):undefined});
+  await b.fire('weekly-player-list','click',{target:target({games:'1'})});
+  const html=b.elements.get('player-games-summary').innerHTML;
+  assert.match(html,/LAST WEEK · NHL POINTS<\/span><strong>4<\/strong>/);
+  assert.match(html,/LAST WEEK · FANTASY POINTS<\/span><strong class="">41<\/strong>/);
+  assert.match(html,/Goals \+ assists/);assert.match(html,/19 Oct – 25 Oct · Helsinki time/);
+  const pending=await dashboard({route:path=>path==='/api/fantasy/players/6/games'?response({games:[],seasonPoints:-2,lastWeek:{...lastWeek,nhlPoints:0,fantasyPoints:-2,pending:true},scoring}):undefined});
+  await pending.fire('roster-slots','click',{target:target({games:'6'})});
+  assert.match(pending.elements.get('player-games-summary').innerHTML,/negative-points">-2\*/);
+  assert.match(pending.elements.get('player-games-summary').innerHTML,/Provisional GSAx/);
+  const missing=await dashboard({route:path=>path==='/api/fantasy/players/1/games'?response({games:[],seasonPoints:80,lastWeek:{...lastWeek,nhlPoints:null,fantasyPoints:null},scoring}):undefined});
+  await missing.fire('weekly-player-list','click',{target:target({games:'1'})});
+  assert.match(missing.elements.get('player-games-summary').innerHTML,/LAST WEEK · NHL POINTS<\/span><strong>—<\/strong>/);
+  assert.match(missing.elements.get('player-games-summary').innerHTML,/Awaiting verified game stats/);
+});
+
 test('pending goalie adjustments stay visibly pending and demo snapshots are clearly labeled',async()=>{
   const demoScoring={...scoring,demo:true};
   const game={gameId:2026020001,date:'2026-10-20',startTime:'2026-10-20T18:00:00Z',team:'COL',opponent:'DAL',points:6.25,pending:true,stats:{saves:28,goalsAgainst:3,shutouts:0,gsax:null},breakdown:[{key:'saves',label:'Saves',value:28,points:17.5},{key:'against',label:'Goals conceded',value:3,points:-11.25},{key:'gsax',label:'Goals saved above expected',value:null,points:null,pending:true}]};

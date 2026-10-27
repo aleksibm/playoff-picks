@@ -138,7 +138,7 @@ test('game scoring applies full PP game-winner, defense multiplier, team win and
   const rt=new Map(skaters.map(r=>[`${r.gameId}:${r.playerId}`,{hits:0,blockedShots:0,takeaways:0}]));
   const fo=new Map(skaters.map(r=>[`${r.gameId}:${r.playerId}`,{totalFaceoffWins:0,totalFaceoffLosses:0}]));
   const result=scoreGame({pbp,skaters,goalies:[{...row,playerId:6,saves:32,goalsAgainst:0,shotsAgainst:32,shutouts:1}],realtime:rt,faceoffs:fo,model:new Map([[`${pbp.id}:6`,{gsax:2,goals:0}]])});
-  assert.equal(result.scores[4],6.25*1.5+.5+5);assert.equal(result.scores[1],20/9+5);
+  assert.equal(result.scores[4],11.25*1.5+.5+3);assert.equal(result.scores[1],4+3);
   assert.equal(result.scores[6],32*.625*1.5+5+10);assert.deepEqual(result.pending,[]);
   const pending=scoreGame({pbp,skaters,goalies:[{...row,playerId:6,saves:32,goalsAgainst:0,shotsAgainst:32,shutouts:0}],realtime:rt,faceoffs:fo,model:new Map()});
   assert.equal(pending.scores[6],25);assert.deepEqual(pending.pending,[6]);

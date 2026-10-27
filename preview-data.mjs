@@ -4,6 +4,7 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { createAccountStore } from './accounts.mjs';
 import { FANTASY_SEASON, BUDGET, playerRole, validateRoster } from './dist/fantasy-rules.js';
 import { scoreGame, validateFantasySnapshot } from './fantasy-scoring.mjs';
+import { FANTASY_RATES } from './fantasy-rates.mjs';
 
 const HOUR=60*60*1000,DAY=24*HOUR;
 const demoNames=['Demo_North','Demo_Rivals','Demo_Ice'];
@@ -98,6 +99,6 @@ export function createPreviewSnapshot(catalog,{playerIds=[],now=Date.now()}={}){
       }));
     }
   }
-  return validateFantasySnapshot({season:FANTASY_SEASON,fetchedAt:new Date(now).toISOString(),demo:true,
+  return validateFantasySnapshot({season:FANTASY_SEASON,scoringVersion:FANTASY_RATES.version,fetchedAt:new Date(now).toISOString(),demo:true,
     source:'Synthetic localhost preview data. Not actual NHL results.',games});
 }

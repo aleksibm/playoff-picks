@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync } from '
 import { join } from 'node:path';
 import { inflateRawSync } from 'node:zlib';
 import { FANTASY_SEASON } from './dist/fantasy-rules.js';
+import { FANTASY_RATES, LEGACY_FANTASY_RATES } from './fantasy-rates.mjs';
 
 const SEASON=Number(FANTASY_SEASON);
 const record=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
@@ -14,20 +15,20 @@ const index=rows=>new Map(rows.map(r=>[key(r),r]));
 const commonStats=['goals','assists','powerPlayGoals','powerPlayAssists','gameWinningGoals','gameWinningPowerPlayGoals','teamWin','penaltyMinutes','minorPenalties','majorPenalties','misconductPenalties'];
 const detailFields={skater:[...commonStats,'shots','hits','blocks','takeaways','faceoffWins','faceoffLosses','defenseMultiplier'],goalie:[...commonStats,'saves','shotsAgainst','goalsAgainst','shutouts','gsax']};
 function packedDetails(kind,stats){return {kind,stats:detailFields[kind].map(field=>stats[field])};}
-function expandedDetails(detail){
+function expandedDetails(detail,rates=FANTASY_RATES){
   if(!detail)return {stats:null,breakdown:null};
   const stats=Object.fromEntries(detailFields[detail.kind].map((field,i)=>[field,detail.stats[i]])),breakdown=[];
   const add=(key,label,value,points)=>breakdown.push({key,label,value,points});
   const mult=detail.kind==='skater'?stats.defenseMultiplier:1;
-  add('goals','Goals outside power play',stats.goals-stats.powerPlayGoals,(stats.goals-stats.powerPlayGoals)*5*mult);
-  add('powerPlayGoals','Power-play goals',stats.powerPlayGoals,stats.powerPlayGoals*10/3*mult);
-  add('assists','Assists outside power play',stats.assists-stats.powerPlayAssists,(stats.assists-stats.powerPlayAssists)*10/3*mult);
-  add('powerPlayAssists','Power-play assists',stats.powerPlayAssists,stats.powerPlayAssists*20/9*mult);
-  add('gameWinningGoals','Game-winning goal bonus',stats.gameWinningGoals,(stats.gameWinningGoals*(6.25-5)+stats.gameWinningPowerPlayGoals*(5-10/3))*mult);
+  add('goals','Goals outside power play',stats.goals-stats.powerPlayGoals,(stats.goals-stats.powerPlayGoals)*rates.goal*mult);
+  add('powerPlayGoals','Power-play goals',stats.powerPlayGoals,stats.powerPlayGoals*rates.powerPlayGoal*mult);
+  add('assists','Assists outside power play',stats.assists-stats.powerPlayAssists,(stats.assists-stats.powerPlayAssists)*rates.assist*mult);
+  add('powerPlayAssists','Power-play assists',stats.powerPlayAssists,stats.powerPlayAssists*rates.powerPlayAssist*mult);
+  add('gameWinningGoals','Game-winning goal bonus',stats.gameWinningGoals,(stats.gameWinningGoals*(rates.gameWinningGoal-rates.goal)+stats.gameWinningPowerPlayGoals*(rates.goal-rates.powerPlayGoal))*mult);
   if(detail.kind==='skater'){
     for(const [key,label] of [['shots','Shots'],['hits','Hits'],['blocks','Blocked shots'],['takeaways','Takeaways']])add(key,label,stats[key],stats[key]*.25);
-    add('faceoffWins','Faceoffs won',stats.faceoffWins,stats.faceoffWins);
-    add('faceoffLosses','Faceoffs lost',stats.faceoffLosses,-stats.faceoffLosses);
+    add('faceoffWins','Faceoffs won',stats.faceoffWins,stats.faceoffWins*rates.faceoff);
+    add('faceoffLosses','Faceoffs lost',stats.faceoffLosses,-stats.faceoffLosses*rates.faceoff);
   }else{
     add('saves','Saves',stats.saves,stats.saves*.625);
     add('shutouts','Shutout save bonus',stats.shutouts,stats.shutouts?stats.saves*.625*.5:0);
@@ -35,7 +36,7 @@ function expandedDetails(detail){
     if(stats.gsax===null)breakdown.push({key:'gsax',label:'Goals saved above expected',value:null,points:null,pending:true});
     else add('gsax','Goals saved above expected',stats.gsax,stats.gsax*5);
   }
-  add('teamWin','Team win',stats.teamWin?1:0,stats.teamWin?5:0);
+  add('teamWin','Team win',stats.teamWin?1:0,stats.teamWin?(detail.kind==='goalie'?rates.goalieWin:rates.skaterWin):0);
   add('minorPenalties','Minor / double-minor penalties',stats.minorPenalties,-stats.minorPenalties*5/3);
   add('majorPenalties','Major penalties',stats.majorPenalties,-stats.majorPenalties*10/3);
   add('misconductPenalties','Misconduct / match penalties',stats.misconductPenalties,-stats.misconductPenalties*5);
@@ -107,7 +108,7 @@ export function goalieModel(rows) {
 }
 
 /** Score one completed game using official appearance/stat rows and event types. */
-export function scoreGame({pbp,skaters,goalies,realtime,faceoffs,model}) {
+export function scoreGame({pbp,skaters,goalies,realtime,faceoffs,model},rates=FANTASY_RATES) {
   if(pbp.season!==SEASON||pbp.gameType!==2||!['FINAL','OFF'].includes(pbp.gameState)||!Number.isFinite(Date.parse(pbp.startTimeUTC)))throw new Error('Fantasy game is not a completed 2026–27 regular-season game.');
   const home=pbp.homeTeam,away=pbp.awayTeam;
   if(home.score===away.score)throw new Error('No game winner.');
@@ -144,11 +145,11 @@ export function scoreGame({pbp,skaters,goalies,realtime,faceoffs,model}) {
   }
   for(const p of goals){
     const pp=goalIsPP(p),d=p.details;
-    add(offense,d.scoringPlayerId,p===gw?6.25:pp?10/3:5);
+    add(offense,d.scoringPlayerId,p===gw?rates.gameWinningGoal:pp?rates.powerPlayGoal:rates.goal);
     const scorer=eventStats(d.scoringPlayerId);scorer.goals++;if(pp)scorer.powerPlayGoals++;
     if(p===gw){scorer.gameWinningGoals++;if(pp)scorer.gameWinningPowerPlayGoals++;}
     for(const aid of [d.assist1PlayerId,d.assist2PlayerId])if(aid){
-      add(offense,aid,pp?20/9:10/3);const assistant=eventStats(aid);assistant.assists++;if(pp)assistant.powerPlayAssists++;
+      add(offense,aid,pp?rates.powerPlayAssist:rates.assist);const assistant=eventStats(aid);assistant.assists++;if(pp)assistant.powerPlayAssists++;
     }
   }
   const scores={},pending=[],teams={},details={};
@@ -157,16 +158,16 @@ export function scoreGame({pbp,skaters,goalies,realtime,faceoffs,model}) {
     if(!rt||!fo)throw new Error('Incomplete skater game reports.');
     const ppg=count(r.ppGoals,'power-play goals'),ppa=count(r.ppPoints,'power-play points')-ppg;
     if(ppa<0||ppa>r.assists||ppg>r.goals)throw new Error('Invalid power-play scoring.');
-    let attack=(count(r.goals,'goals')-ppg)*5+ppg*10/3+(count(r.assists,'assists')-ppa)*10/3+ppa*20/9;
+    let attack=(count(r.goals,'goals')-ppg)*rates.goal+ppg*rates.powerPlayGoal+(count(r.assists,'assists')-ppa)*rates.assist+ppa*rates.powerPlayAssist;
     if(r.gameWinningGoals){
       if(gwPlayer!==r.playerId)throw new Error('Game-winning goal reports disagree.');
-      attack+=6.25-(goalIsPP(gw)?10/3:5);
+      attack+=rates.gameWinningGoal-(goalIsPP(gw)?rates.powerPlayGoal:rates.goal);
     }
     if(Math.abs(attack-(offense.get(r.playerId)??0))>1e-7)throw new Error(`Goal event and official reports disagree: game ${pbp.id}, ${r.skaterFullName}, report ${attack}, events ${offense.get(r.playerId)??0}.`);
     const mult=r.positionCode==='D'?1.5:1;
     const peripherals=(count(r.shots,'shots')+count(rt.hits,'hits')+count(rt.blockedShots,'blocks')+count(rt.takeaways,'takeaways'))*.25;
-    const win=(r.homeRoad==='H')===homeWon?5:0;
-    scores[r.playerId]=attack*mult+count(fo.totalFaceoffWins,'faceoff wins')-count(fo.totalFaceoffLosses,'faceoff losses')+peripherals+win+(penalties.get(r.playerId)??0);
+    const win=(r.homeRoad==='H')===homeWon?rates.skaterWin:0;
+    scores[r.playerId]=attack*mult+(count(fo.totalFaceoffWins,'faceoff wins')-count(fo.totalFaceoffLosses,'faceoff losses'))*rates.faceoff+peripherals+win+(penalties.get(r.playerId)??0);
     teams[r.playerId]=r.teamAbbrev;
     details[r.playerId]=packedDetails('skater',{...eventStats(r.playerId),goals:r.goals,assists:r.assists,powerPlayGoals:ppg,powerPlayAssists:ppa,
       gameWinningGoals:r.gameWinningGoals??0,teamWin:win>0,shots:r.shots,hits:rt.hits,blocks:rt.blockedShots,takeaways:rt.takeaways,
@@ -178,7 +179,7 @@ export function scoreGame({pbp,skaters,goalies,realtime,faceoffs,model}) {
     // No model contribution is required for a genuine zero-shot appearance.
     if(!gsax&&r.shotsAgainst>0)pending.push(r.playerId);
     const saves=count(r.saves,'saves')*.625*(r.shutouts?1.5:1);
-    const win=(r.homeRoad==='H')===homeWon?5:0;
+    const win=(r.homeRoad==='H')===homeWon?rates.goalieWin:0;
     scores[r.playerId]=saves-count(r.goalsAgainst,'goals conceded')*3.75+(gsax?.gsax??0)*5+win+(offense.get(r.playerId)??0)+(penalties.get(r.playerId)??0);
     teams[r.playerId]=r.teamAbbrev;
     details[r.playerId]=packedDetails('goalie',{...eventStats(r.playerId),teamWin:win>0,saves:r.saves,shotsAgainst:r.shotsAgainst,
@@ -187,8 +188,9 @@ export function scoreGame({pbp,skaters,goalies,realtime,faceoffs,model}) {
   return {id:pbp.id,startTime:pbp.startTimeUTC,date:pbp.gameDate,homeTeam:home.abbrev??null,awayTeam:away.abbrev??null,scores,pending,teams,details};
 }
 
-export function validateFantasySnapshot(snapshot) {
+export function validateFantasySnapshot(snapshot,rates=FANTASY_RATES) {
   if(!record(snapshot)||snapshot.season!==FANTASY_SEASON||!Number.isFinite(Date.parse(snapshot.fetchedAt))||!Array.isArray(snapshot.games)||snapshot.games.length>1312)throw new Error('Invalid fantasy snapshot.');
+  if(snapshot.scoringVersion!==undefined&&snapshot.scoringVersion!==rates.version)throw new Error('Incompatible fantasy scoring version.');
   const seen=new Set();
   for(const g of snapshot.games){
     if(!Number.isSafeInteger(g.id)||!String(g.id).startsWith('202602')||seen.has(g.id)||!Number.isFinite(Date.parse(g.startTime))||!record(g.scores)||!Array.isArray(g.pending)||!record(g.teams))throw new Error('Invalid fantasy game ledger.');
@@ -200,7 +202,7 @@ export function validateFantasySnapshot(snapshot) {
       if(!record(g.details)||Object.keys(g.details).length!==Object.keys(g.scores).length||Object.keys(g.details).length>80||new Set(g.pending).size!==g.pending.length)throw new Error('Invalid fantasy game details.');
       for(const [id,detail] of Object.entries(g.details)){
         if(!/^[1-9]\d*$/.test(id)||!Number.isSafeInteger(Number(id))||!Object.hasOwn(g.scores,id)||!record(detail)||Object.keys(detail).length!==2||!Object.hasOwn(detail,'kind')||!Object.hasOwn(detail,'stats')||!Object.hasOwn(detailFields,detail.kind)||!Array.isArray(detail.stats)||detail.stats.length!==detailFields[detail.kind].length)throw new Error('Invalid fantasy player details.');
-        const {stats,breakdown}=expandedDetails(detail);
+        const {stats,breakdown}=expandedDetails(detail,rates);
         for(const [field,value] of Object.entries(stats)){
           if(field==='teamWin'){if(typeof value!=='boolean')throw new Error('Invalid fantasy win detail.');}
           else if(field==='defenseMultiplier'){if(value!==1&&value!==1.5)throw new Error('Invalid fantasy defense multiplier.');}
@@ -220,6 +222,16 @@ export function validateFantasySnapshot(snapshot) {
     }
   }
   return snapshot;
+}
+
+/** Re-score verified old detail tuples without downloading or discarding data. */
+export function upgradeFantasySnapshot(snapshot){
+  if(snapshot?.scoringVersion===FANTASY_RATES.version)return validateFantasySnapshot(snapshot);
+  validateFantasySnapshot(snapshot,LEGACY_FANTASY_RATES);
+  if(snapshot.games.some(game=>!game.details&&Object.keys(game.scores).length))throw new Error('Legacy fantasy scores need a verified statistics refresh.');
+  const games=snapshot.games.map(game=>({...game,scores:Object.fromEntries(Object.entries(game.details??{}).map(([id,detail])=>
+    [id,expandedDetails(detail).breakdown.reduce((total,part)=>total+(part.points??0),0)]))}));
+  return validateFantasySnapshot({...snapshot,scoringVersion:FANTASY_RATES.version,games});
 }
 
 function playerGame(g,id){
@@ -370,5 +382,5 @@ export async function fetchFantasySnapshot({fetchImpl=fetch,now=Date.now(),cache
     if(path){const temp=`${path}.tmp`;writeFileSync(temp,JSON.stringify(pbp),{mode:0o600});renameSync(temp,path);}
     return game;
   });
-  return validateFantasySnapshot({season:FANTASY_SEASON,fetchedAt:new Date(now).toISOString(),games,modelError});
+  return validateFantasySnapshot({season:FANTASY_SEASON,scoringVersion:FANTASY_RATES.version,fetchedAt:new Date(now).toISOString(),games,modelError});
 }

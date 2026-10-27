@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { applyMinimumPrice, priceVersion, initialMarket, updateWeeklyPrices, validateMarket, previousPriceUpdate, nextPriceUpdate } from '../market-prices.mjs';
+import { applyMinimumPrice, priceVersion, initialMarket, updateWeeklyPrices, validateMarket, playerPriceChange, previousPriceUpdate, nextPriceUpdate } from '../market-prices.mjs';
 import { createAccountStore } from '../accounts.mjs';
 import { createApp } from '../server.mjs';
 const players=[
@@ -68,6 +68,29 @@ test('weekly prices blend 75/25, cap both directions at 5% and apply only once p
   assert.equal(next.prices[4],base.prices[4]);assert.equal(updateWeeklyPrices(catalog,next,stats({1:1000}),monday+3600000),next);
   assert.equal(validateMarket(catalog,next),next);assert.throws(()=>validateMarket(catalog,{...next,prices:{...next.prices,1:1}}));
 });
+test('weekly value changes survive serialization and measure the latest update rather than the catalog baseline',()=>{
+  const base=initialMarket(catalog),next=updateWeeklyPrices(catalog,base,stats({1:100,2:-10}),monday);
+  assert.equal(playerPriceChange(base,1),null);
+  const saved=validateMarket(catalog,JSON.parse(JSON.stringify(next)));
+  assert.deepEqual(saved.previousPrices,base.prices);
+  assert.equal(playerPriceChange(saved,1).amount,600_000);
+  assert.ok(Math.abs(playerPriceChange(saved,1).percent-5)<1e-9);
+  assert.equal(playerPriceChange(saved,2).amount,-600_000);
+  assert.equal(playerPriceChange(saved,4).amount,0);
+  assert.equal(playerPriceChange(saved,999),null);
+  const following=Date.parse('2026-10-26T10:00:00Z');
+  const later=updateWeeklyPrices(catalog,saved,{...stats({1:100}),fetchedAt:new Date(following).toISOString()},following);
+  assert.equal(playerPriceChange(later,1).previousPrice,saved.prices[1]);
+  assert.equal(playerPriceChange(later,1).amount,630_000);
+  assert.equal(playerPriceChange(later,1).asOf,new Date(following).toISOString());
+  assert.deepEqual(base.prices,initialMarket(catalog).prices);
+  assert.throws(()=>validateMarket(catalog,{...saved,previousPrices:{...saved.previousPrices,1:1}}));
+  for(const previousPrices of [{1:0},{999:1},[],null]){
+    const invalid={...saved,previousPrices};invalid.version=priceVersion(invalid);
+    assert.throws(()=>validateMarket(catalog,invalid));
+  }
+});
+
 test('weekly target uses current-season pace and preserves prices for short samples, stale feeds and provisional GSAx',()=>{
   const base=initialMarket(catalog),next=updateWeeklyPrices(catalog,base,stats({1:1200/82,6:10},[6]),monday);
   assert.equal(next.prices[1],12_000_000);assert.equal(next.prices[6],4_000_000);

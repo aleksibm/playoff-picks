@@ -14,16 +14,22 @@ export function previousPriceUpdate(now=Date.now()){
   return day;
 }
 export function nextPriceUpdate(now=Date.now()){let day=nextDailyUpdate(now);while(localDay.format(day)!=='Mon')day=nextDailyUpdate(day);return day;}
-export function priceVersion(snapshot){return createHash('sha256').update(JSON.stringify([snapshot.asOf,snapshot.prices])).digest('hex').slice(0,20);}
+export function priceVersion(snapshot){const parts=[snapshot.asOf,snapshot.prices];if(snapshot.previousPrices!==undefined)parts.push(snapshot.previousPrices);return createHash('sha256').update(JSON.stringify(parts)).digest('hex').slice(0,20);}
+function validPreviousPrices(snapshot){return snapshot.previousPrices===undefined||Boolean(snapshot.previousPrices&&typeof snapshot.previousPrices==='object'&&!Array.isArray(snapshot.previousPrices)&&Object.entries(snapshot.previousPrices).every(([id,price])=>Object.hasOwn(snapshot.prices,id)&&Number.isSafeInteger(price)&&price>0));}
+export function playerPriceChange(market,id){
+  const previousPrice=market.previousPrices?.[id],price=market.prices[id];
+  if(!Number.isSafeInteger(previousPrice)||previousPrice<=0||!Number.isSafeInteger(price))return null;
+  return {amount:price-previousPrice,percent:(price/previousPrice-1)*100,previousPrice,asOf:market.asOf};
+}
 export function initialMarket(catalog){const snapshot={season:catalog.season,asOf:'2026-10-18T00:00:00.000Z',prices:Object.fromEntries(catalog.players.map(p=>[p.id,p.price]))};return applyMinimumPrice({...snapshot,version:priceVersion(snapshot)});}
 export function validateMarket(catalog,snapshot){
-  if(snapshot?.season!==catalog.season||!Number.isFinite(Date.parse(snapshot.asOf))||!snapshot.prices||Object.keys(snapshot.prices).length!==catalog.players.length||catalog.players.some(p=>!Number.isSafeInteger(snapshot.prices[p.id])||snapshot.prices[p.id]<=0)||snapshot.version!==priceVersion(snapshot))throw Error('Invalid fantasy price snapshot');
+  if(snapshot?.season!==catalog.season||!Number.isFinite(Date.parse(snapshot.asOf))||!snapshot.prices||Object.keys(snapshot.prices).length!==catalog.players.length||catalog.players.some(p=>!Number.isSafeInteger(snapshot.prices[p.id])||snapshot.prices[p.id]<=0)||!validPreviousPrices(snapshot)||snapshot.version!==priceVersion(snapshot))throw Error('Invalid fantasy price snapshot');
   return snapshot;
 }
 /** Add debutants without resetting the verified prices or their update date. */
 export function reconcileMarket(catalog,snapshot){
   const players=new Map(catalog.players.map(player=>[player.id,player]));
-  if(snapshot?.season!==catalog.season||!Number.isFinite(Date.parse(snapshot.asOf))||!snapshot.prices||typeof snapshot.prices!=='object'||Array.isArray(snapshot.prices)||players.size!==catalog.players.length||snapshot.version!==priceVersion(snapshot))throw Error('Invalid fantasy price snapshot');
+  if(snapshot?.season!==catalog.season||!Number.isFinite(Date.parse(snapshot.asOf))||!snapshot.prices||typeof snapshot.prices!=='object'||Array.isArray(snapshot.prices)||players.size!==catalog.players.length||!validPreviousPrices(snapshot)||snapshot.version!==priceVersion(snapshot))throw Error('Invalid fantasy price snapshot');
   if(Object.entries(snapshot.prices).some(([id,price])=>!players.has(Number(id))||String(Number(id))!==id||!Number.isSafeInteger(price)||price<=0))throw Error('Invalid fantasy price snapshot');
   const missing=catalog.players.filter(player=>!Object.hasOwn(snapshot.prices,player.id));
   if(missing.some(player=>player.newcomer!==true))throw Error('Invalid fantasy price snapshot');
@@ -38,6 +44,8 @@ export function updateWeeklyPrices(catalog,market,stats,now=Date.now()){
   if(Date.parse(market.asOf)>=due)return market;
   // A failed daily stats refresh cannot move market prices on stale statistics.
   if(!stats||stats.season!==catalog.season||Date.parse(stats.fetchedAt)<due)return market;
+  // Never combine a revalued catalog with an old-scale score cache.
+  if(catalog.scoringVersion&&stats.scoringVersion!==catalog.scoringVersion)return market;
   const totals=new Map(),played=new Map(),pending=new Set();
   for(const game of stats.games){
     if(Date.parse(game.startTime)>due)continue;
@@ -59,6 +67,6 @@ export function updateWeeklyPrices(catalog,market,stats,now=Date.now()){
   }
   // A missed week causes one capped adjustment with the latest verified stats,
   // never multiple compounded increases on a single restart.
-  const next={season:catalog.season,asOf:new Date(due).toISOString(),prices};
+  const next={season:catalog.season,asOf:new Date(due).toISOString(),prices,previousPrices:{...market.prices}};
   return {...next,version:priceVersion(next)};
 }

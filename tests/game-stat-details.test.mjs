@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { scoreGame, playerGameLogs, scoreFantasyHistory, validateFantasySnapshot } from '../fantasy-scoring.mjs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { scoreGame, playerGameLogs, scoreFantasyHistory, validateFantasySnapshot, upgradeFantasySnapshot } from '../fantasy-scoring.mjs';
+import { FANTASY_RATES, LEGACY_FANTASY_RATES } from '../fantasy-rates.mjs';
+import { initialMarket, priceVersion } from '../market-prices.mjs';
 import { createApp } from '../server.mjs';
 
 const snapshot=games=>({season:'20262027',fetchedAt:'2026-10-24T09:00:00Z',games});
@@ -34,26 +39,26 @@ test('game logs show verified skater counts and exact fractional scoring without
   const scored=scoreGame(fixture()),feed=snapshot([scored]);validateFantasySnapshot(feed);
   const attacker=playerGameLogs(feed,1)[0],defender=playerGameLogs(feed,2)[0];
   assert.deepEqual(attacker.stats,{goals:2,assists:1,powerPlayGoals:1,powerPlayAssists:0,gameWinningGoals:0,gameWinningPowerPlayGoals:0,teamWin:true,penaltyMinutes:19,minorPenalties:1,majorPenalties:1,misconductPenalties:1,shots:4,hits:2,blocks:3,takeaways:1,faceoffWins:7,faceoffLosses:4,defenseMultiplier:1});
-  close(attacker.points,5+10/3+10/3+7-4+2.5+5-5/3-10/3-5);
-  close(component(attacker,'powerPlayGoals').points,10/3);
+  close(attacker.points,9+6+6+(7-4)*.5+2.5+3-5/3-10/3-5);
+  close(component(attacker,'powerPlayGoals').points,6);
   close(component(attacker,'minorPenalties').points,-5/3);
   close(component(attacker,'majorPenalties').points,-10/3);
   assert.equal(component(attacker,'misconductPenalties').points,-5);
   assert.equal(defender.stats.defenseMultiplier,1.5);
-  close(component(defender,'goals').points+component(defender,'gameWinningGoals').points,6.25*1.5);
-  close(component(defender,'powerPlayAssists').points,20/9*1.5);
+  close(component(defender,'goals').points+component(defender,'gameWinningGoals').points,11.25*1.5);
+  close(component(defender,'powerPlayAssists').points,4*1.5);
   for(const game of [attacker,defender]){close(sum(game),game.points);assert.equal(new Set(game.breakdown.map(row=>row.key)).size,game.breakdown.length);}
   assert.ok(Array.isArray(scored.details[1].stats));assert.equal(Object.hasOwn(scored.details[1],'breakdown'),false);
 });
 
-test('a power-play game-winning goal totals 6.25 before the defense multiplier',()=>{
+test('a power-play game-winning goal totals 11.25 before the defense multiplier',()=>{
   const input=fixture();input.pbp.homeTeam.score=1;input.pbp.awayTeam.score=0;input.pbp.plays=input.pbp.plays.slice(1,2);
   input.skaters=[{...input.skaters[0],positionCode:'D',goals:1,assists:0,ppGoals:1,ppPoints:1,gameWinningGoals:1}];input.goalies=[];
   // Remove the assist as this fixture only checks the scorer.
   delete input.pbp.plays[0].details.assist1PlayerId;
   const game=playerGameLogs(snapshot([scoreGame(input)]),1)[0];
   assert.equal(game.stats.gameWinningPowerPlayGoals,1);
-  close(component(game,'powerPlayGoals').points+component(game,'gameWinningGoals').points,6.25*1.5);
+  close(component(game,'powerPlayGoals').points+component(game,'gameWinningGoals').points,11.25*1.5);
   close(sum(game),game.points);
 });
 
@@ -62,7 +67,7 @@ test('goalie logs retain signed GSAx, offensive points and explicitly pending ad
   const verified=playerGameLogs(feed,6)[0],pending=playerGameLogs(feed,7)[0];
   assert.equal(verified.stats.gsax,-.75);assert.equal(verified.stats.saves,30);assert.equal(verified.stats.assists,1);
   assert.equal(component(verified,'gsax').points,-3.75);
-  close(verified.points,30*.625-3.75-.75*5+5+10/3);close(sum(verified),verified.points);
+  close(verified.points,30*.625-3.75-.75*5+5+6);close(sum(verified),verified.points);
   assert.equal(pending.pending,true);assert.equal(pending.stats.gsax,null);
   assert.deepEqual(component(pending,'gsax'),{key:'gsax',label:'Goals saved above expected',value:null,points:null,pending:true});
   close(sum(pending),pending.points);
@@ -113,6 +118,52 @@ test('snapshot validation rejects malformed, contradictory and forged detail tup
   ];
   for(const mutate of invalid){const feed=structuredClone(valid);mutate(feed.games[0]);assert.throws(()=>validateFantasySnapshot(feed));}
   const legacy=structuredClone(valid);delete legacy.games[0].details;assert.equal(validateFantasySnapshot(legacy),legacy);
+});
+
+test('old score caches are verified before all appearances are rescored, retaining raw stats and pending GSAx',()=>{
+  const old=snapshot([scoreGame(fixture(),LEGACY_FANTASY_RATES)]),before=structuredClone(old);
+  const next=upgradeFantasySnapshot(old);
+  assert.deepEqual(old,before);
+  assert.equal(next.scoringVersion,FANTASY_RATES.version);
+  assert.deepEqual(next.games[0].scores,scoreGame(fixture()).scores);
+  assert.deepEqual(next.games[0].details,old.games[0].details);
+  assert.deepEqual(next.games[0].pending,old.games[0].pending);
+  assert.equal(next.fetchedAt,old.fetchedAt);
+  assert.equal(upgradeFantasySnapshot(next),next);
+  const forged=structuredClone(old);forged.games[0].scores[1]++;
+  assert.throws(()=>upgradeFantasySnapshot(forged));
+  const incomplete=structuredClone(old);delete incomplete.games[0].details;
+  assert.throws(()=>upgradeFantasySnapshot(incomplete),/verified statistics refresh/);
+  assert.throws(()=>upgradeFantasySnapshot({...old,scoringVersion:'unknown'}));
+});
+
+test('startup persists upgraded scores while both public price views retain the verified existing market',async t=>{
+  const directory=mkdtempSync(join(tmpdir(),'fantasy-scoring-upgrade-'));
+  t.after(()=>rmSync(directory,{recursive:true,force:true}));
+  const fantasyCachePath=join(directory,'fantasy-scores.json'),marketCachePath=join(directory,'market-prices.json');
+  const players=Array.from({length:8},(_,i)=>({id:i+1,name:`Player ${i+1}`,position:i<3?'C':i<5?'D':'G',team:'COL',price:1_000_000,lastPoints:100,games:82}));
+  const oldCatalog={season:'20262027',usdPerPoint:10_000,players};
+  const existing={...initialMarket(oldCatalog),asOf:'2026-10-24T09:00:00Z'};existing.version=priceVersion(existing);
+  writeFileSync(marketCachePath,JSON.stringify(existing));
+  writeFileSync(fantasyCachePath,JSON.stringify(snapshot([scoreGame(fixture(),LEGACY_FANTASY_RATES)])));
+  const updatedCatalog={...oldCatalog,scoringVersion:FANTASY_RATES.version,players:players.map(p=>({...p,price:1_500_000,lastPoints:180}))};
+  const options={dbPath:':memory:',fantasyCatalog:updatedCatalog,fantasyCachePath,marketCachePath,now:()=>Date.parse('2026-10-24T12:00:00Z'),allowStandingsFetch:false,allowFantasyFetch:false,allowContractFetch:false};
+  const app=createApp(options);t.after(()=>app.close());
+  await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
+  const origin=`http://127.0.0.1:${app.server.address().port}`;
+  const picker=await (await fetch(origin+'/api/fantasy/players')).json();
+  const values=await (await fetch(origin+'/api/fantasy/value')).json();
+  const logs=await (await fetch(origin+'/api/fantasy/players/1/games')).json();
+  assert.equal(picker.market.version,existing.version);
+  assert.ok(picker.players.every(p=>p.price===1_000_000));
+  assert.ok(values.players.every(p=>p.fantasyValue===1_000_000));
+  assert.equal(logs.games[0].points,scoreGame(fixture()).scores[1]);
+  const saved=JSON.parse(readFileSync(fantasyCachePath,'utf8'));
+  assert.equal(saved.scoringVersion,FANTASY_RATES.version);
+  assert.deepEqual(saved.games[0].scores,scoreGame(fixture()).scores);
+  assert.deepEqual(JSON.parse(readFileSync(marketCachePath,'utf8')),existing);
+  const restarted=createApp(options);t.after(()=>restarted.close());
+  assert.deepEqual(JSON.parse(readFileSync(fantasyCachePath,'utf8')),saved);
 });
 
 test('public and personal APIs return verified details from cache without fetching on read',async t=>{

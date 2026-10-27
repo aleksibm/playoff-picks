@@ -33,7 +33,7 @@ try {
 }
 
 const required = ['server.mjs', 'accounts.mjs', 'admin.mjs', 'hosting.mjs', 'schedule.mjs',
-  'standings.mjs', 'fantasy-scoring.mjs', 'fantasy-players.json', 'roster-updates.mjs', 'fantasy-roster.json', 'player-values.mjs', 'market-prices.mjs', 'contract-updates.mjs', 'player-contracts.json', 'dist/player-value.html', 'dist/player-value.css', 'dist/player-value.js', 'dist/value-rules.js', 'dist/fantasy.html', 'dist/fantasy.css', 'dist/fantasy.js', 'dist/fantasy-rules.js',
+  'standings.mjs', 'fantasy-scoring.mjs', 'fantasy-rates.mjs', 'fantasy-valuation.mjs', 'revalue-fantasy.mjs', 'fantasy-players.json', 'roster-updates.mjs', 'fantasy-roster.json', 'player-values.mjs', 'market-prices.mjs', 'contract-updates.mjs', 'player-contracts.json', 'dist/player-value.html', 'dist/player-value.css', 'dist/player-value.js', 'dist/value-rules.js', 'dist/fantasy.html', 'dist/fantasy.css', 'dist/fantasy.js', 'dist/fantasy-rules.js',
   'dist/index.html', 'dist/styles.css', 'dist/app.js', 'dist/game.js', 'dist/fantasy-rink.js', 'dist/icon.svg'];
 const absent = required.filter(name => !existsSync(join(appDirectory, name)));
 check(absent.length === 0, absent.length ? `Required app files missing: ${absent.join(', ')}` : 'Required app files are present.');
