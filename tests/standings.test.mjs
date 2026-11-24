@@ -173,16 +173,64 @@ test('invalid predictions and stale or incomplete cached snapshots cannot score'
   assert.throws(() => rankEntries([], null), /complete/);
 });
 
-test('fetching uses the official endpoint, rejects redirects, and bounds the request', async () => {
+test('fetching uses the official endpoint, handles redirects manually, and bounds the request', async () => {
   const snapshot = await fetchStandings(async (url, options) => {
     assert.equal(url, 'https://api-web.nhle.com/v1/standings/now');
-    assert.equal(options.redirect, 'error');
+    assert.equal(options.redirect, 'manual');
     assert.equal(options.headers.Accept, 'application/json');
     assert.ok(options.signal instanceof AbortSignal);
     assert.equal(options.signal.aborted, false);
     return new Response(JSON.stringify(validPayload()), { headers: { 'Content-Type': 'application/json' } });
   });
   assert.equal(snapshot.season, TARGET_SEASON);
+});
+
+test('the official dated standings redirect succeeds with the same deadline and full validation', async () => {
+  for (const location of ['/v1/standings/2026-10-09', 'https://api-web.nhle.com/v1/standings/2026-10-09']) {
+    const requests = [];
+    const snapshot = await fetchStandings(async (url, options) => {
+      requests.push({ url, options });
+      return requests.length === 1 ? new Response(null, { status:307, headers:{ location } })
+        : Response.json(validPayload());
+    });
+    assert.equal(snapshot.asOf, '2026-10-09');
+    assert.equal(requests.length, 2);
+    assert.equal(requests[1].url, 'https://api-web.nhle.com/v1/standings/2026-10-09');
+    assert.equal(requests[1].options.redirect, 'manual');
+    assert.equal(requests[1].options.signal, requests[0].options.signal);
+  }
+});
+
+test('foreign, credentialed, malformed and repeated standings redirects are rejected before following', async () => {
+  for (const location of [undefined, 'https://evil.example/v1/standings/2026-10-09',
+    'http://api-web.nhle.com/v1/standings/2026-10-09', 'https://user:pass@api-web.nhle.com/v1/standings/2026-10-09',
+    '/v1/roster/BOS/current', '/v1/standings/now', '/v1/standings/2026-02-30',
+    '/v1/standings/2026-10-09?url=https://evil.example', '/v1/standings/2026-10-09#section']) {
+    let calls = 0;
+    await assert.rejects(fetchStandings(async () => {
+      calls++;
+      return new Response(null, { status:307, headers:location ? { location } : {} });
+    }), /redirect|valid standings date/);
+    assert.equal(calls, 1, String(location));
+  }
+  let calls = 0;
+  await assert.rejects(fetchStandings(async () => {
+    calls++;
+    return new Response(null, { status:307, headers:{ location:'/v1/standings/2026-10-09' } });
+  }), /second redirect/);
+  assert.equal(calls, 2);
+});
+
+test('redirected standings must still pass the current-season, HTTP and size checks', async () => {
+  for (const [response, expected] of [
+    [new Response(null, { status:503 }), /HTTP 503/],
+    [new Response('{}', { headers:{ 'Content-Length':String(1024*1024+1) } }), /too large/],
+    [Response.json({ ...validPayload(), seasonId:20252026 }), /2026–27/],
+  ]) {
+    let calls = 0;
+    await assert.rejects(fetchStandings(async () => ++calls === 1
+      ? new Response(null, { status:307, headers:{ location:'/v1/standings/2026-10-09' } }) : response), expected);
+  }
 });
 
 test('oversized upstream feeds are rejected before parsing, including streamed bodies', async () => {

@@ -350,10 +350,30 @@ export async function fetchFantasySnapshot({fetchImpl=fetch,now=Date.now(),cache
     return Buffer.concat(chunks);
   }
   async function report(kind,name,extra=''){
-    const q=new URLSearchParams({isAggregate:'false',isGame:'true',start:'0',limit:'-1',cayenneExp:`seasonId=${seasonId} and gameTypeId=2${since===null?'':` and gameDate>="${new Date(since).toISOString().slice(0,10)}"`}${extra?' and '+extra:''}`});
-    const obj=JSON.parse((await bytes(`https://api.nhle.com/stats/rest/en/${kind}/${name}?${q}`)).toString('utf8'));
-    if(!Array.isArray(obj.data)||obj.data.length!==obj.total||obj.data.some(r=>!String(r.gameId).startsWith(`${year}02`)))throw new Error(`Incomplete fantasy statistics report: ${kind}/${name}.`);
-    return obj.data;
+    const pageSize=1000,maxRows=1312*(kind==='team'?2:80),rows=[],seen=new Set();
+    const q=new URLSearchParams({isAggregate:'false',isGame:'true',start:'0',limit:String(pageSize),
+      sort:JSON.stringify([{property:'gameId',direction:'ASC'},{property:kind==='team'?'teamId':'playerId',direction:'ASC'}]),
+      cayenneExp:`seasonId=${seasonId} and gameTypeId=2${since===null?'':` and gameDate>="${new Date(since).toISOString().slice(0,10)}"`}${extra?' and '+extra:''}`});
+    let total=null;
+    const invalid=reason=>new Error(`Incomplete fantasy statistics report: ${kind}/${name} (${reason}).`);
+    do{
+      q.set('start',String(rows.length));
+      const obj=JSON.parse((await bytes(`https://api.nhle.com/stats/rest/en/${kind}/${name}?${q}`)).toString('utf8'));
+      if(!obj||!Array.isArray(obj.data)||!Number.isSafeInteger(obj.total)||obj.total<0||obj.total>maxRows)throw invalid('invalid row count');
+      if(total!==null&&obj.total!==total)throw invalid(`row count changed from ${total} to ${obj.total} during paging`);
+      total=obj.total;
+      if(obj.data.length>pageSize||rows.length+obj.data.length>total||(!obj.data.length&&rows.length<total))throw invalid(`received ${rows.length+obj.data.length} of ${total} rows`);
+      for(const row of obj.data){
+        if(!row||!Number.isSafeInteger(row.gameId)||!String(row.gameId).startsWith(`${year}02`)||typeof row.gameDate!=='string'||!Number.isFinite(Date.parse(row.gameDate)))throw invalid('invalid game or season');
+        const identity=kind==='team'?row.homeRoad:row.playerId;
+        if(kind==='team'?!['H','R'].includes(identity):!Number.isSafeInteger(identity)||identity<=0)throw invalid('invalid appearance identity');
+        const key=`${row.gameId}:${identity}`;
+        if(seen.has(key))throw invalid(`duplicate appearance ${key}`);
+        seen.add(key);rows.push(row);
+      }
+      // Advance by the actual page size: NHL may cap a larger requested limit.
+    }while(rows.length<total);
+    return rows;
   }
   const teamRows=await report('team','summary');
   if(!teamRows.length&&!playerWindows)throw new Error('Fantasy statistics are not available yet.');

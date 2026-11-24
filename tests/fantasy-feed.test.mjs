@@ -85,5 +85,45 @@ test('historical feeds use their own season and select actual player windows wit
   assert.ok(requests.some(url=>url.includes('/2025.zip')));
   const query=new URL(requests.find(url=>url.includes('/team/summary'))).searchParams;
   assert.match(query.get('cayenneExp'),/seasonId=20252026/);assert.match(query.get('cayenneExp'),/gameDate>="2023-10-26"/);
-  assert.equal(query.get('limit'),'-1');
+  assert.equal(query.get('limit'),'1000');
+});
+
+test('NHL reports follow capped pages for team and player appearances before scoring',async t=>{
+  const f=fixture(t),requests=[];
+  const fetchImpl=async(url,options)=>{
+    const response=await f.fetchImpl(url,options);
+    if(!String(url).includes('/stats/rest/en/'))return response;
+    const parsed=new URL(url),body=await response.json(),start=Number(parsed.searchParams.get('start'));
+    const data=parsed.pathname.endsWith('/team/summary')?[...body.data,{...body.data[0],homeRoad:'R'}]:body.data;
+    requests.push({path:parsed.pathname,start,sort:JSON.parse(parsed.searchParams.get('sort')),limit:parsed.searchParams.get('limit')});
+    return Response.json({data:data.slice(start,start+1),total:data.length});
+  };
+  const snapshot=await fetchFantasySnapshot({...f,fetchImpl});
+  assert.equal(snapshot.games.length,1);
+  assert.equal(playerGameLogs(snapshot,2)[0].stats.assists,1);
+  for(const report of ['team/summary','skater/summary','skater/realtime','skater/faceoffwins'])assert.deepEqual(requests.filter(request=>request.path.endsWith(report)).map(request=>request.start),[0,1]);
+  assert.ok(requests.every(request=>request.limit==='1000'));
+  assert.deepEqual(requests[0].sort,[{property:'gameId',direction:'ASC'},{property:'teamId',direction:'ASC'}]);
+});
+
+test('missing, changing, duplicate and wrong-season report pages fail without overwriting cached events',async t=>{
+  for(const mode of ['missing','changing','duplicate','wrong-season','oversized-count']){
+    const f=fixture(t);
+    const fetchImpl=async(url,options)=>{
+      const response=await f.fetchImpl(url,options);
+      if(!String(url).includes('/team/summary'))return response;
+      const body=await response.json(),start=Number(new URL(url).searchParams.get('start'));
+      const row={...body.data[0],homeRoad:start?'R':'H'};
+      if(mode==='oversized-count')return Response.json({data:[row],total:999999});
+      if(!start)return Response.json({data:[row],total:2});
+      if(mode==='missing')return Response.json({data:[],total:2});
+      if(mode==='changing')return Response.json({data:[row],total:3});
+      if(mode==='duplicate')row.homeRoad='H';
+      if(mode==='wrong-season')row.gameId=2025020001;
+      return Response.json({data:[row],total:2});
+    };
+    await assert.rejects(fetchFantasySnapshot({...f,fetchImpl}),/Incomplete fantasy statistics report: team\/summary/);
+    assert.equal(f.eventReads(),0);
+    assert.deepEqual(JSON.parse(readFileSync(f.path,'utf8')),f.pbp);
+  }
 });

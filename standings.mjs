@@ -141,11 +141,31 @@ export function rankEntries(entries, snapshot) {
 /** Fetch only official NHL data, with a bounded wait and strict season checks. */
 export async function fetchStandings(fetchImpl = fetch) {
   if (typeof fetchImpl !== 'function') throw new TypeError('A fetch implementation is required.');
-  const response = await fetchImpl(STANDINGS_URL, {
+  const options = {
     headers: { Accept: 'application/json' },
-    redirect: 'error',
+    redirect: 'manual',
     signal: AbortSignal.timeout(10_000),
-  });
+  };
+  let response = await fetchImpl(STANDINGS_URL, options);
+  if ([301, 302, 303, 307, 308].includes(response?.status)) {
+    // NHL's "now" route redirects to its latest dated snapshot. Follow only
+    // that fixed-host date route once, sharing the original request deadline.
+    const location = response.headers.get('location');
+    let target;
+    try { target = new URL(location, STANDINGS_URL); } catch { /* Rejected below. */ }
+    await response.body?.cancel();
+    const date = target?.pathname.slice('/v1/standings/'.length);
+    if (!location || !target || target.origin !== new URL(STANDINGS_URL).origin || target.username || target.password
+        || target.search || target.hash || !/^\/v1\/standings\/\d{4}-\d{2}-\d{2}$/.test(target.pathname)) {
+      throw new Error('The NHL standings feed returned an unexpected redirect.');
+    }
+    requireDate(date);
+    response = await fetchImpl(target.href, options);
+    if ([301, 302, 303, 307, 308].includes(response?.status)) {
+      await response.body?.cancel();
+      throw new Error('The NHL standings feed returned an unexpected second redirect.');
+    }
+  }
   if (!response?.ok) {
     throw new Error(`The official NHL standings feed is unavailable (HTTP ${response?.status ?? 'unknown'}).`);
   }
