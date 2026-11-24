@@ -23,7 +23,7 @@ export function validateRosterSnapshot(snapshot){
 }
 
 async function jsonBody(response,maxBytes){
-  if(!response.ok||response.redirected||Number(response.headers.get('content-length'))>maxBytes||!response.body)throw Error('NHL roster source unavailable.');
+  if(!response.ok||response.redirected||Number(response.headers.get('content-length'))>maxBytes||!response.body)throw Error(`NHL roster source unavailable (HTTP ${response.status}).`);
   const reader=response.body.getReader(),chunks=[];let size=0;
   try{
     for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>maxBytes)throw Error('Oversized NHL roster source.');chunks.push(value);}
@@ -36,7 +36,8 @@ async function currentRoster(team,fetchImpl){
   const response=await fetchImpl(current,requestOptions('manual'));
   // The current route redirects to the season route. Never follow a different
   // host or season: the fantasy competition has one explicitly configured year.
-  if(![301,302,303,307,308].includes(response.status)||new URL(response.headers.get('location')??'',current).href!==expected)throw Error('NHL current roster does not match the fantasy season.');
+  if(![301,302,303,307,308].includes(response.status))throw Error(`NHL current roster source unavailable (HTTP ${response.status}); expected the current-season redirect.`);
+  if(new URL(response.headers.get('location')??'',current).href!==expected)throw Error('NHL current roster does not match the fantasy season.');
   const data=await jsonBody(await fetchImpl(expected,requestOptions('error')),128*1024);
   if(!record(data)||!['forwards','defensemen','goalies'].every(role=>Array.isArray(data[role])))throw Error('Invalid NHL team roster.');
   if(data.forwards.length<8||data.defensemen.length<3||data.goalies.length<1)throw Error('Incomplete NHL team roster.');
@@ -78,7 +79,10 @@ export async function fetchRosterSnapshot({catalog=null,previous=null,fetchImpl=
   if(previous)validateRosterSnapshot(previous);
   if(catalog&&(catalog.season!==FANTASY_SEASON||!Array.isArray(catalog.players)))throw Error('Invalid base player catalog.');
   if(!Number.isFinite(now))throw Error('Invalid NHL roster update time.');
-  const [index,rosters]=await Promise.all([activeIndex(fetchImpl),mapLimit(TEAMS,4,team=>currentRoster(team.id,fetchImpl))]);
+  const [index,rosters]=await Promise.all([
+    activeIndex(fetchImpl).catch(error=>{throw new Error(`NHL active-player index failed: ${error.message}`,{cause:error});}),
+    mapLimit(TEAMS,4,async team=>{try{return await currentRoster(team.id,fetchImpl);}catch(error){throw new Error(`NHL roster for ${team.id} failed: ${error.message}`,{cause:error});}}),
+  ]);
   const prior=new Map((previous?.players??[]).map(player=>[player.id,player]));
   const known=new Set([...(catalog?.players??[]).map(player=>player.id),...prior.keys()]);
   const rosterIds=new Set(rosters.flat().map(player=>player.id)),players=new Map();

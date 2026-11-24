@@ -4,7 +4,10 @@ import { inflateRawSync } from 'node:zlib';
 import { FANTASY_SEASON } from './dist/fantasy-rules.js';
 import { FANTASY_RATES, LEGACY_FANTASY_RATES } from './fantasy-rates.mjs';
 
-const SEASON=Number(FANTASY_SEASON);
+function seasonNumber(season){
+  if(typeof season!=='string'||!/^\d{8}$/.test(season)||Number(season.slice(4))!==Number(season.slice(0,4))+1)throw new Error('Invalid fantasy season.');
+  return Number(season);
+}
 const record=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const count=(x,label)=>{if(!Number.isSafeInteger(x)||x<0)throw new Error(`Invalid fantasy feed: ${label}`);return x;};
 const n=(x)=>x??0;
@@ -94,13 +97,14 @@ export function unzipCsv(buffer) {
   }
   throw new Error('Goalie CSV not found.');
 }
-export function goalieModel(rows) {
+export function goalieModel(rows,season=FANTASY_SEASON) {
+  const year=Math.floor(seasonNumber(season)/10000);
   const map=new Map();
   for(const row of rows){
     if(row.situation!=='all')continue;
-    if(Number(row.season)!==2026)throw new Error('Wrong MoneyPuck season.');
+    if(Number(row.season)!==year)throw new Error('Wrong MoneyPuck season.');
     const id=Number(row.playerId),gameId=Number(row.gameId),x=Number(row.xGoals),goals=Number(row.goals);
-    if(!Number.isSafeInteger(id)||!String(gameId).startsWith('202602')||!Number.isFinite(x)||x<0||!Number.isFinite(goals)||goals<0)throw new Error('Invalid goalie model row.');
+    if(!Number.isSafeInteger(id)||!String(gameId).startsWith(`${year}02`)||!Number.isFinite(x)||x<0||!Number.isFinite(goals)||goals<0)throw new Error('Invalid goalie model row.');
     if(map.has(`${gameId}:${id}`))throw new Error('Duplicate goalie model row.');
     map.set(`${gameId}:${id}`,{gsax:x-goals,goals});
   }
@@ -108,8 +112,8 @@ export function goalieModel(rows) {
 }
 
 /** Score one completed game using official appearance/stat rows and event types. */
-export function scoreGame({pbp,skaters,goalies,realtime,faceoffs,model},rates=FANTASY_RATES) {
-  if(pbp.season!==SEASON||pbp.gameType!==2||!['FINAL','OFF'].includes(pbp.gameState)||!Number.isFinite(Date.parse(pbp.startTimeUTC)))throw new Error('Fantasy game is not a completed 2026–27 regular-season game.');
+export function scoreGame({pbp,skaters,goalies,realtime,faceoffs,model},rates=FANTASY_RATES,season=FANTASY_SEASON) {
+  if(pbp.season!==seasonNumber(season)||pbp.gameType!==2||!['FINAL','OFF'].includes(pbp.gameState)||!Number.isFinite(Date.parse(pbp.startTimeUTC)))throw new Error('Fantasy game is not a completed regular-season game for the requested season.');
   const home=pbp.homeTeam,away=pbp.awayTeam;
   if(home.score===away.score)throw new Error('No game winner.');
   const winner=home.score>away.score?home.id:away.id;
@@ -188,12 +192,13 @@ export function scoreGame({pbp,skaters,goalies,realtime,faceoffs,model},rates=FA
   return {id:pbp.id,startTime:pbp.startTimeUTC,date:pbp.gameDate,homeTeam:home.abbrev??null,awayTeam:away.abbrev??null,scores,pending,teams,details};
 }
 
-export function validateFantasySnapshot(snapshot,rates=FANTASY_RATES) {
-  if(!record(snapshot)||snapshot.season!==FANTASY_SEASON||!Number.isFinite(Date.parse(snapshot.fetchedAt))||!Array.isArray(snapshot.games)||snapshot.games.length>1312)throw new Error('Invalid fantasy snapshot.');
+export function validateFantasySnapshot(snapshot,rates=FANTASY_RATES,season=FANTASY_SEASON) {
+  const year=Math.floor(seasonNumber(season)/10000);
+  if(!record(snapshot)||snapshot.season!==season||!Number.isFinite(Date.parse(snapshot.fetchedAt))||!Array.isArray(snapshot.games)||snapshot.games.length>1312)throw new Error('Invalid fantasy snapshot.');
   if(snapshot.scoringVersion!==undefined&&snapshot.scoringVersion!==rates.version)throw new Error('Incompatible fantasy scoring version.');
   const seen=new Set();
   for(const g of snapshot.games){
-    if(!Number.isSafeInteger(g.id)||!String(g.id).startsWith('202602')||seen.has(g.id)||!Number.isFinite(Date.parse(g.startTime))||!record(g.scores)||!Array.isArray(g.pending)||!record(g.teams))throw new Error('Invalid fantasy game ledger.');
+    if(!Number.isSafeInteger(g.id)||!String(g.id).startsWith(`${year}02`)||seen.has(g.id)||!Number.isFinite(Date.parse(g.startTime))||!record(g.scores)||!Array.isArray(g.pending)||!record(g.teams))throw new Error('Invalid fantasy game ledger.');
     seen.add(g.id);
     if(Object.values(g.scores).some(x=>!Number.isFinite(x)||Math.abs(x)>1000))throw new Error('Invalid fantasy score.');
     if(g.pending.some(id=>!Number.isSafeInteger(id)||!Object.hasOwn(g.scores,id)))throw new Error('Invalid pending score.');
@@ -327,30 +332,32 @@ async function mapLimit(items,limit,fn){
   return results;
 }
 
-export async function fetchFantasySnapshot({fetchImpl=fetch,now=Date.now(),cacheDir=null}={}) {
+export async function fetchFantasySnapshot({fetchImpl=fetch,now=Date.now(),cacheDir=null,season=FANTASY_SEASON,since=null,playerWindows=null}={}) {
+  const seasonId=seasonNumber(season),year=Math.floor(seasonId/10000);
+  if(since!==null&&!Number.isFinite(since))throw new Error('Invalid fantasy history cutoff.');
   async function bytes(url,max=30*1024*1024){
     let response;
     for(let attempt=0;attempt<3;attempt++){
       try{response=await fetchImpl(url,{signal:AbortSignal.timeout(30_000),headers:{'User-Agent':'PlayoffPickFantasy/1.0'}});if(response.ok)break;if(response.status<500&&response.status!==429)break;}
-      catch(error){if(attempt===2)throw new Error(`Fantasy feed timed out: ${new URL(url).pathname}`,{cause:error});}
+      catch(error){if(attempt===2)throw new Error(`Fantasy feed request failed: ${new URL(url).hostname}${new URL(url).pathname}`,{cause:error});}
       if(attempt<2)await new Promise(resolve=>setTimeout(resolve,(attempt+1)*700));
     }
     if(!response)throw new Error('Fantasy statistics provider is unavailable.');
-    if(!response.ok)throw new Error('Fantasy statistics provider is unavailable.');
+    if(!response.ok)throw new Error(`Fantasy statistics provider is unavailable (HTTP ${response.status}): ${new URL(url).hostname}${new URL(url).pathname}`);
     if(Number(response.headers.get('content-length'))>max)throw new Error('Oversized fantasy statistics feed.');
     const chunks=[];let length=0;
     for await(const chunk of response.body){length+=chunk.length;if(length>max){await response.body.cancel().catch(()=>{});throw new Error('Oversized fantasy statistics feed.');}chunks.push(chunk);}
     return Buffer.concat(chunks);
   }
   async function report(kind,name,extra=''){
-    const q=new URLSearchParams({isAggregate:'false',isGame:'true',start:'0',limit:'-1',cayenneExp:`seasonId=${SEASON} and gameTypeId=2${extra?' and '+extra:''}`});
+    const q=new URLSearchParams({isAggregate:'false',isGame:'true',start:'0',limit:'-1',cayenneExp:`seasonId=${seasonId} and gameTypeId=2${since===null?'':` and gameDate>="${new Date(since).toISOString().slice(0,10)}"`}${extra?' and '+extra:''}`});
     const obj=JSON.parse((await bytes(`https://api.nhle.com/stats/rest/en/${kind}/${name}?${q}`)).toString('utf8'));
-    if(!Array.isArray(obj.data)||obj.data.length!==obj.total||obj.data.some(r=>!String(r.gameId).startsWith('202602')))throw new Error('Incomplete fantasy statistics report.');
+    if(!Array.isArray(obj.data)||obj.data.length!==obj.total||obj.data.some(r=>!String(r.gameId).startsWith(`${year}02`)))throw new Error(`Incomplete fantasy statistics report: ${kind}/${name}.`);
     return obj.data;
   }
   const teamRows=await report('team','summary');
-  if(!teamRows.length)throw new Error('2026–27 fantasy statistics are not available yet.');
-  const ids=[...new Set(teamRows.map(r=>r.gameId))].sort();
+  if(!teamRows.length&&!playerWindows)throw new Error('Fantasy statistics are not available yet.');
+  let ids=[...new Set(teamRows.map(r=>r.gameId))].sort();
   const dates=[...new Set(teamRows.map(r=>r.gameDate.slice(0,7)))];
   const specs=[['skater','summary'],['skater','realtime'],['skater','faceoffwins'],['goalie','summary']];
   const reports=await mapLimit(specs,4,async([kind,name])=>(await mapLimit(dates,2,async month=>{
@@ -358,10 +365,21 @@ export async function fetchFantasySnapshot({fetchImpl=fetch,now=Date.now(),cache
     return report(kind,name,`gameDate>="${month}-01" and gameDate<"${next.toISOString().slice(0,10)}"`);
   })).flat());
   const [skaters,realtime,faceoffs,goalies]=reports;
+  const selected=new Map();
+  if(playerWindows){
+    const rows=[...skaters,...goalies].sort((a,b)=>b.gameDate.localeCompare(a.gameDate)||b.gameId-a.gameId);
+    for(const row of rows){
+      const limit=playerWindows.get(row.playerId);if(!limit)continue;
+      if(!selected.has(row.playerId))selected.set(row.playerId,new Set());
+      const games=selected.get(row.playerId);if(games.size<limit)games.add(row.gameId);
+    }
+    const wanted=new Set([...selected.values()].flatMap(games=>[...games]));
+    ids=ids.filter(id=>wanted.has(id));
+  }
   const rt=index(realtime),fo=index(faceoffs);
-  let model=new Map(),modelError=null;
-  try{model=goalieModel(parseCsv(unzipCsv(await bytes('https://peter-tanner.com/moneypuck/downloads/seasonPlayersSummary/goalies/2026.zip',8*1024*1024))));}
-  catch{modelError='Goals saved above expected are awaiting MoneyPuck data. Scores marked provisional exclude the pending adjustment.';}
+  let model=new Map(),modelError=null,modelFailureReason=null;
+  try{model=goalieModel(parseCsv(unzipCsv(await bytes(`https://peter-tanner.com/moneypuck/downloads/seasonPlayersSummary/goalies/${year}.zip`,8*1024*1024))),season);}
+  catch(error){modelError='Goals saved above expected are awaiting MoneyPuck data. Scores marked provisional exclude the pending adjustment.';modelFailureReason=error;}
   const groups=rows=>{const m=new Map();for(const r of rows){if(!m.has(r.gameId))m.set(r.gameId,[]);m.get(r.gameId).push(r);}return m;};
   const sk=groups(skaters),gl=groups(goalies);
   if(cacheDir)mkdirSync(cacheDir,{recursive:true,mode:0o700});
@@ -372,7 +390,7 @@ export async function fetchFantasySnapshot({fetchImpl=fetch,now=Date.now(),cache
       try{const saved=JSON.parse(readFileSync(path,'utf8'));if(now-Date.parse(saved.gameDate)>7*86400000)pbp=saved;}catch{/* Replace a corrupt event cache. */}
     }
     if(!sk.has(id)||!gl.has(id))throw new Error('Missing fantasy game appearances.');
-    const score=()=>scoreGame({pbp,skaters:sk.get(id),goalies:gl.get(id),realtime:rt,faceoffs:fo,model});
+    const score=()=>scoreGame({pbp,skaters:sk.get(id),goalies:gl.get(id),realtime:rt,faceoffs:fo,model},FANTASY_RATES,season);
     if(pbp){
       try{return score();}
       catch{/* Official stat corrections can outlive the seven-day event cache. */}
@@ -382,5 +400,13 @@ export async function fetchFantasySnapshot({fetchImpl=fetch,now=Date.now(),cache
     if(path){const temp=`${path}.tmp`;writeFileSync(temp,JSON.stringify(pbp),{mode:0o600});renameSync(temp,path);}
     return game;
   });
-  return validateFantasySnapshot({season:FANTASY_SEASON,scoringVersion:FANTASY_RATES.version,fetchedAt:new Date(now).toISOString(),games,modelError});
+  const filtered=playerWindows?games.map(game=>{
+    const keep=id=>selected.get(Number(id))?.has(game.id);
+    return {...game,scores:Object.fromEntries(Object.entries(game.scores).filter(([id])=>keep(id))),pending:game.pending.filter(keep),
+      teams:Object.fromEntries(Object.entries(game.teams).filter(([id])=>keep(id))),details:Object.fromEntries(Object.entries(game.details).filter(([id])=>keep(id)))};
+  }):games;
+  const snapshot=validateFantasySnapshot({season,scoringVersion:FANTASY_RATES.version,fetchedAt:new Date(now).toISOString(),games:filtered,modelError},FANTASY_RATES,season);
+  // Diagnostic context is available to the server, never the public snapshot.
+  if(modelFailureReason)Object.defineProperty(snapshot,'modelFailureReason',{value:modelFailureReason});
+  return snapshot;
 }

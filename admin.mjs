@@ -87,7 +87,7 @@ function readAdminJSON(request) {
 }
 
 /** A separate listener that can only bind to this computer's IPv4 loopback. */
-export function createLocalAdmin({ overview, refreshStandings, canRefresh, manageAccount }) {
+export function createLocalAdmin({ overview, refreshStandings, canRefresh, manageAccount, updateMonitor }) {
   const csrfToken = randomBytes(32).toString('base64url');
   const responseBody = () => ({ ...overview(), csrfToken });
   let closed = false;
@@ -110,6 +110,24 @@ export function createLocalAdmin({ overview, refreshStandings, canRefresh, manag
         if (request.method !== 'GET') {
           response.setHeader('Allow', 'GET');
           throw failure(405, 'This request method is not supported.');
+        }
+        return json(response, 200, responseBody());
+      }
+      const notificationAction = /^\/api\/admin\/notifications\/(settings|test|chats)$/.exec(path);
+      if (notificationAction && updateMonitor) {
+        if (request.method !== 'POST') {
+          response.setHeader('Allow', 'POST');
+          throw failure(405, 'This request method is not supported.');
+        }
+        if (request.headers.origin !== origin || !equalTokens(request.headers['x-csrf-token'], csrfToken)) {
+          throw failure(403, 'Reload the local administration page before changing notifications.');
+        }
+        const body = await readAdminJSON(request);
+        if (notificationAction[1] === 'chats') return json(response, 200, { chats:await updateMonitor.findChats(body) });
+        if (notificationAction[1] === 'settings') updateMonitor.saveSettings(body);
+        else {
+          if (Object.keys(body).length) throw failure(400, 'Send an empty JSON object to test Telegram.');
+          await updateMonitor.test();
         }
         return json(response, 200, responseBody());
       }
@@ -188,7 +206,7 @@ export function createLocalAdmin({ overview, refreshStandings, canRefresh, manag
     } catch (error) {
       request.resume();
       if (response.writableEnded || response.destroyed) return;
-      const status = Number.isInteger(error.status) && error.status >= 400 && error.status < 500 ? error.status : error.status === 503 ? 503 : 500;
+      const status = Number.isInteger(error.status) && error.status >= 400 && error.status < 500 ? error.status : [502,503].includes(error.status) ? error.status : 500;
       if (status === 503) response.setHeader('Retry-After', '2');
       json(response, status, { error: status === 500 ? 'The local administration page could not load. Try again.' : error.message });
     }

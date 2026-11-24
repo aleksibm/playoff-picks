@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { rebalanceFantasyCatalog } from '../fantasy-valuation.mjs';
 import { FANTASY_RATES } from '../fantasy-rates.mjs';
+import { priceHistoryCutoff } from '../fantasy-price-history.mjs';
 import { BUDGET } from '../dist/fantasy-rules.js';
 import { initialMarket, updateWeeklyPrices } from '../market-prices.mjs';
 
@@ -46,11 +47,13 @@ test('recalibrated weekly targets stay at baseline for unchanged performance and
   const next=rebalanceFantasyCatalog(old,old.players.map(p=>result(p,{goals:p.lastPoints})));
   const market=initialMarket(next),monday=Date.parse('2026-10-19T09:00:00Z');
   const stats={season:next.season,scoringVersion:next.scoringVersion,fetchedAt:new Date(monday).toISOString(),games:Array.from({length:5},(_,i)=>({startTime:`2026-10-${10+i}T18:00:00Z`,pending:[],scores:{1:180/82,2:360/82}}))};
-  assert.deepEqual(updateWeeklyPrices(next,market,stats,monday).prices,market.prices);
-  assert.equal(updateWeeklyPrices(next,market,{...stats,scoringVersion:'legacy'},monday),market);
-  assert.equal(updateWeeklyPrices(next,market,{...stats,scoringVersion:undefined},monday),market);
+  const history={season:next.season,scoringVersion:next.scoringVersion,fetchedAt:new Date(monday).toISOString(),from:new Date(priceHistoryCutoff(monday)).toISOString(),playerIds:[1,2],
+    games:Array.from({length:95},(_,i)=>({id:2025020001+i,startTime:new Date(Date.UTC(2026,0,1+i)).toISOString(),scores:{1:180/82,2:360/82},pending:[],teams:{}}))};
+  assert.deepEqual(updateWeeklyPrices(next,market,stats,monday,history).prices,market.prices);
+  assert.equal(updateWeeklyPrices(next,market,{...stats,scoringVersion:'legacy'},monday,history),market);
+  assert.equal(updateWeeklyPrices(next,market,{...stats,scoringVersion:undefined},monday,history),market);
   const extreme={...stats,games:stats.games.map(g=>({...g,scores:{1:1000,2:-1000}}))};
-  const capped=updateWeeklyPrices(next,market,extreme,monday);
+  const capped=updateWeeklyPrices(next,market,extreme,monday,history);
   assert.equal(capped.prices[1],market.prices[1]*1.05);
   assert.equal(capped.prices[2],market.prices[2]*.95);
 });

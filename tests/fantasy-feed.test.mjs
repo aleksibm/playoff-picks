@@ -58,3 +58,32 @@ test('a disagreement in fresh events still rejects the refresh and preserves the
   assert.equal(f.eventReads(),1);
   assert.deepEqual(JSON.parse(readFileSync(f.path,'utf8')),f.pbp);
 });
+
+test('MoneyPuck failures retain private HTTP diagnostics without serializing them into public scores',async t=>{
+  const snapshot=await fetchFantasySnapshot(fixture(t));
+  assert.match(snapshot.modelFailureReason.message,/HTTP 404/);
+  assert.match(snapshot.modelFailureReason.message,/2026.zip/);
+  assert.match(snapshot.modelError,/provisional/);
+  assert.ok(!JSON.stringify(snapshot).includes('modelFailureReason'));
+  assert.ok(!JSON.stringify(snapshot).includes('HTTP 404'));
+});
+
+
+test('historical feeds use their own season and select actual player windows with the current scoring rules',async t=>{
+  const f=fixture(t),requests=[];
+  const fetchImpl=async url=>{
+    requests.push(String(url));
+    const response=await f.fetchImpl(url);if(!response.ok)return response;
+    const body=await response.json();
+    if(String(url).endsWith('/play-by-play'))return Response.json({...body,id:2025020001,season:20252026,gameDate:'2025-10-01',startTimeUTC:'2025-10-01T18:00:00Z'});
+    return Response.json({...body,data:body.data.map(row=>({...row,gameId:2025020001,gameDate:'2025-10-01'}))});
+  };
+  const result=await fetchFantasySnapshot({fetchImpl,now:f.now,season:'20252026',since:Date.parse('2023-10-26T10:00:00Z'),playerWindows:new Map([[2,1]])});
+  assert.equal(result.season,'20252026');assert.equal(result.games[0].id,2025020001);
+  assert.deepEqual(Object.keys(result.games[0].scores),['2']);assert.equal(result.games[0].scores[2],12);
+  assert.deepEqual(result.games[0].pending,[]);
+  assert.ok(requests.some(url=>url.includes('/2025.zip')));
+  const query=new URL(requests.find(url=>url.includes('/team/summary'))).searchParams;
+  assert.match(query.get('cayenneExp'),/seasonId=20252026/);assert.match(query.get('cayenneExp'),/gameDate>="2023-10-26"/);
+  assert.equal(query.get('limit'),'-1');
+});

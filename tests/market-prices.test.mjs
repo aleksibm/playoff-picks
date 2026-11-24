@@ -4,7 +4,9 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { applyMinimumPrice, priceVersion, initialMarket, updateWeeklyPrices, validateMarket, playerPriceChange, previousPriceUpdate, nextPriceUpdate } from '../market-prices.mjs';
+import { applyMinimumPrice, priceVersion, initialMarket, updateWeeklyPrices as calculateWeeklyPrices, validateMarket, playerPriceChange, previousPriceUpdate, nextPriceUpdate } from '../market-prices.mjs';
+import { FANTASY_RATES } from '../fantasy-rates.mjs';
+import { priceHistoryCutoff } from '../fantasy-price-history.mjs';
 import { createAccountStore } from '../accounts.mjs';
 import { createApp } from '../server.mjs';
 const players=[
@@ -20,6 +22,13 @@ const catalog={season:'20262027',usdPerPoint:10000,players};
 const lineup=[1,2,3,4,5,6];
 const monday=Date.parse('2026-10-19T09:00:00Z');
 function stats(scores,pending=[]){return {season:'20262027',fetchedAt:new Date(monday).toISOString(),games:Array.from({length:5},(_,i)=>({startTime:`2026-10-${String(10+i).padStart(2,'0')}T20:00:00Z`,scores,pending}))};}
+
+function historyFor(snapshot,catalog,now=monday){
+  return {season:catalog.season,scoringVersion:FANTASY_RATES.version,fetchedAt:new Date(now).toISOString(),from:new Date(priceHistoryCutoff(now)).toISOString(),
+    playerIds:catalog.players.map(player=>player.id),games:Array.from({length:100},(_,i)=>({id:2025020001+i,startTime:new Date(Date.UTC(2026,0,1+i)).toISOString(),
+      scores:{...snapshot.games[0]?.scores},pending:[],teams:{}}))};
+}
+function updateWeeklyPrices(catalog,market,snapshot,now){return calculateWeeklyPrices(catalog,market,snapshot,now,snapshot?historyFor(snapshot,catalog,now):null);}
 
 test('new and verified existing markets floor player prices at $100,000 and invalidate old quotes',()=>{
   const cheapCatalog={...catalog,players:players.map(p=>({...p,price:p.id===3?40_000:p.price}))};
@@ -61,7 +70,7 @@ test('startup persists the floor for verified saved prices and both public marke
   assert.equal(picker.market.minimumPrice,100_000);assert.equal(saved.prices[3],100_000);
   assert.notEqual(saved.version,snapshot.version);assert.equal(picker.market.version,saved.version);
 });
-test('weekly prices blend 75/25, cap both directions at 5% and apply only once per Monday',()=>{
+test('weekly prices blend 50/25/25, cap both directions at 5% and apply only once per Monday',()=>{
   const base=initialMarket(catalog),next=updateWeeklyPrices(catalog,base,stats({1:100,2:-10,3:2,6:20}),monday);
   assert.equal(next.prices[1],12_600_000);assert.equal(next.prices[2],11_400_000);
   assert.equal(next.prices[3],1_050_000);assert.equal(next.prices[6],4_200_000);
@@ -135,4 +144,47 @@ test('cash survives restart and schema 3 teams retain their original unused cash
   reprice({1:20_000_000});const other=createAccountStore(dbPath,{fantasyPlayers:players,fantasyPrices:priceProvider});assert.equal(other.getFantasy(user.id).cashBalance,3_000_000);other.close();
   const db=new DatabaseSync(dbPath);db.exec('ALTER TABLE fantasy_entries DROP COLUMN cash_balance;DROP TABLE fantasy_trades;PRAGMA user_version=3;');db.close();
   const migrated=createAccountStore(dbPath,{fantasyPlayers:players,fantasyPrices:priceProvider});assert.equal(migrated.getFantasy(user.id).cashBalance,3_000_000);assert.deepEqual(migrated.getFantasy(user.id).activePlayerIds,lineup);migrated.close();
+});
+
+
+test('rolling prices use the latest 100 and 25 actual appearances across seasons with exact weights',()=>{
+  const player={...players[0],price:1_100_000,lastPoints:999999};
+  const pool={...catalog,usdPerPoint:1000,players:[player]},snapshot=stats({1:18});
+  const history=historyFor(snapshot,pool);
+  history.games=Array.from({length:95},(_,i)=>({id:2025020001+i,startTime:new Date(Date.UTC(2025,9,1+i)).toISOString(),scores:{1:i<75?10:14},pending:[],teams:{}}));
+  history.games.push({id:2024020001,startTime:'2024-10-01T18:00:00Z',scores:{1:999},pending:[],teams:{}});
+  history.games.reverse();
+  const next=calculateWeeklyPrices(pool,initialMarket(pool),snapshot,monday,history);
+  // Last 100: 11.2/game; this season: 18/game; last 25: 14.8/game.
+  assert.equal(next.prices[1],1_131_600);
+});
+
+test('rolling windows exclude games older than three calendar years and include the exact cutoff',()=>{
+  const pool={...catalog,usdPerPoint:1000,players:[{...players[0],price:1_500_000}]},snapshot=stats({1:20});
+  const history=historyFor(snapshot,pool),cutoff=priceHistoryCutoff(monday);
+  history.games=[
+    {id:2023020001,startTime:new Date(cutoff-1).toISOString(),scores:{1:999},pending:[],teams:{}},
+    {id:2023020002,startTime:new Date(cutoff).toISOString(),scores:{1:10},pending:[],teams:{}},
+  ];
+  assert.equal(calculateWeeklyPrices(pool,initialMarket(pool),snapshot,monday,history).prices[1],1_537_500);
+});
+
+test('shorter histories use available appearances, normalize goalies to 55 games and wait for verified history',()=>{
+  const pool={...catalog,usdPerPoint:1000,players:[{...players[5],price:550_000}]},snapshot=stats({6:10});
+  const history=historyFor(snapshot,pool);history.games=[];
+  assert.equal(calculateWeeklyPrices(pool,initialMarket(pool),snapshot,monday,history).prices[6],550_000);
+  const base=initialMarket(pool);
+  assert.equal(calculateWeeklyPrices(pool,base,snapshot,monday),base);
+  assert.equal(calculateWeeklyPrices(pool,base,snapshot,monday,{...history,scoringVersion:'old'}),base);
+  assert.equal(calculateWeeklyPrices(pool,base,snapshot,monday,{...history,from:new Date(priceHistoryCutoff(monday)+1).toISOString()}),base);
+  history.playerIds=[];
+  assert.equal(calculateWeeklyPrices(pool,base,snapshot,monday,history).prices[6],550_000);
+});
+
+test('pending historical GSAx protects prices only while the appearance is in the rolling window',()=>{
+  const pool={...catalog,players:[players[5]]},snapshot=stats({6:100});
+  const history=historyFor(snapshot,pool);history.games[99].pending=[6];
+  assert.equal(calculateWeeklyPrices(pool,initialMarket(pool),snapshot,monday,history).prices[6],players[5].price);
+  history.games[99].pending=[];history.games[0].pending=[6];
+  assert.equal(calculateWeeklyPrices(pool,initialMarket(pool),snapshot,monday,history).prices[6],4_200_000);
 });

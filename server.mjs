@@ -14,8 +14,10 @@ import { FANTASY_RATES } from './fantasy-rates.mjs';
 import { FANTASY_SEASON, BUDGET } from './dist/fantasy-rules.js';
 import { buildPlayerValues } from './player-values.mjs';
 import { createContractUpdater, fetchContractSnapshot } from './contract-updates.mjs';
-import { MINIMUM_PLAYER_PRICE, applyMinimumPrice, initialMarket, reconcileMarket, pricedPlayers, playerPriceChange, updateWeeklyPrices, previousPriceUpdate, nextPriceUpdate } from './market-prices.mjs';
+import { MINIMUM_PLAYER_PRICE, PRICE_WEIGHTS, applyMinimumPrice, initialMarket, reconcileMarket, pricedPlayers, playerPriceChange, updateWeeklyPrices, previousPriceUpdate, nextPriceUpdate } from './market-prices.mjs';
+import { fetchPriceHistory, validatePriceHistory } from './fantasy-price-history.mjs';
 import { fetchRosterSnapshot, validateRosterSnapshot, mergeRosterCatalog } from './roster-updates.mjs';
+import { createUpdateMonitor } from './update-monitor.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FANTASY_CATALOG = JSON.parse(readFileSync(join(HERE,'fantasy-players.json'),'utf8'));
@@ -173,6 +175,9 @@ export function createApp(options = {}) {
     mkdirSync(directory, { recursive: true, mode: 0o700 });
     chmodSync(directory, 0o700);
   }
+  const updateMonitor = createUpdateMonitor({ directory:dbPath === ':memory:' || previewData ? null : dirname(dbPath), now,
+    fetchImpl:options.telegramFetch, writeLine:options.updateLog ?? (dbPath === ':memory:' || previewData ? () => {} : undefined),
+    setTimer:options.monitorSetTimer, clearTimer:options.monitorClearTimer });
   const baseCatalog = options.fantasyCatalog ?? FANTASY_CATALOG;
   const rosterCachePath=options.rosterCachePath??(dbPath===':memory:'?null:join(dirname(dbPath),'fantasy-roster.json'));
   let rosterSnapshot=options.rosterSnapshot?validateRosterSnapshot(options.rosterSnapshot):options.fantasyCatalog?null:FANTASY_ROSTER;
@@ -229,11 +234,34 @@ export function createApp(options = {}) {
   const canRefreshContracts=Boolean(options.contractProvider)||(options.allowContractFetch??(options.standingsProvider||options.fantasyProvider?false:options.allowStandingsFetch??process.env.PLAYOFF_PICK_FETCH_CONTRACTS!=='0'));
   const contractUpdater=createContractUpdater({catalog:fantasyCatalog,initial:contractState.snapshot,state:contractState,now,
     run:options.contractProvider??(previous=>fetchContractSnapshot({catalog:fantasyCatalog,previous,now:now()})),
+    report:(event,error)=>event==='failed'?updateMonitor.fail('contracts',error,{lastSuccessAt:contractUpdater.getSnapshot().asOf}):updateMonitor.success('contracts',contractUpdater.getSnapshot().asOf),
     save:state=>{if(contractCachePath)saveSnapshot(contractCachePath,state);}});
 
   if(fantasyCachePath&&existsSync(fantasyCachePath)){
     try{if(statSync(fantasyCachePath).size>16*1024*1024)throw new Error('Oversized fantasy cache');const saved=JSON.parse(readFileSync(fantasyCachePath,'utf8')),upgraded=upgradeFantasySnapshot(saved);if(upgraded!==saved)saveSnapshot(fantasyCachePath,upgraded);fantasySnapshot=upgraded;}
     catch{fantasyError='Saved fantasy scores could not be verified. Awaiting an update.';}
+  }
+
+  const priceHistoryCachePath=options.priceHistoryCachePath??(dbPath===':memory:'?null:join(dirname(dbPath),'fantasy-price-history.json'));
+  let priceHistory=options.priceHistorySnapshot?validatePriceHistory(options.priceHistorySnapshot,fantasyCatalog.season):null;
+  let priceHistoryError=null,priceHistoryRefreshing=null;
+  const canRefreshPriceHistory=Boolean(options.priceHistoryProvider)||(options.allowPriceHistoryFetch??(!options.fantasyCatalog&&!options.fantasyProvider&&canRefreshFantasy));
+  const priceHistoryProvider=options.priceHistoryProvider??(()=>fetchPriceHistory({catalog:fantasyCatalog,stats:fantasySnapshot,asOf:previousPriceUpdate(now()),now:now(),previous:priceHistory,
+    cacheDir:fantasyCachePath?join(dirname(fantasyCachePath),'fantasy-events'):null}));
+  if(priceHistoryCachePath&&existsSync(priceHistoryCachePath)){
+    try{if(statSync(priceHistoryCachePath).size>16*1024*1024)throw Error();const saved=validatePriceHistory(JSON.parse(readFileSync(priceHistoryCachePath,'utf8')),fantasyCatalog.season);if(Date.parse(saved.fetchedAt)>now())throw Error();priceHistory=saved;}
+    catch{priceHistoryError='Historical appearances are awaiting a verified refresh. Existing prices remain available.';}
+  }
+  async function refreshPriceHistory(){
+    if(closed||!fantasySnapshot||!canRefreshPriceHistory)return;
+    if(priceHistoryRefreshing)return priceHistoryRefreshing;
+    updateMonitor.begin('history');
+    priceHistoryRefreshing=(async()=>{
+      try{const next=validatePriceHistory(await priceHistoryProvider(),fantasyCatalog.season);if(Date.parse(next.fetchedAt)>now())throw Error();if(closed)return;
+        if(priceHistoryCachePath&&next!==priceHistory)saveSnapshot(priceHistoryCachePath,next);priceHistory=next;priceHistoryError=null;updateMonitor.success('history',next.fetchedAt);refreshMarket();}
+      catch(error){priceHistoryError='Historical appearances could not be refreshed. Prices wait for verified rolling game windows.';updateMonitor.fail('history',error,{lastSuccessAt:priceHistory?.fetchedAt??null});}
+    })();
+    try{return await priceHistoryRefreshing;}finally{priceHistoryRefreshing=null;}
   }
 
   function fantasyMetadata(){return {...(previewData?{demo:true}:{}),available:Boolean(fantasySnapshot),fetchedAt:fantasySnapshot?.fetchedAt??null,
@@ -246,6 +274,7 @@ export function createApp(options = {}) {
   async function refreshRoster(){
     if(closed||!canRefreshRoster)return rosterMetadata();
     if(rosterRefreshing)return rosterRefreshing;
+    updateMonitor.begin('roster');
     rosterRefreshing=(async()=>{
       try{
         const received=validateRosterSnapshot(await rosterProvider(rosterSnapshot));
@@ -257,13 +286,14 @@ export function createApp(options = {}) {
         if(rosterCachePath)saveSnapshot(rosterCachePath,next);
         if(marketCachePath&&prices!==market)saveSnapshot(marketCachePath,prices);
         rosterSnapshot=next;fantasyCatalog=catalog;market=prices;rosterError=null;
-      }catch{rosterError='The NHL player roster could not be refreshed. The last verified player list remains in use.';}
+        updateMonitor.success('roster',next.fetchedAt);
+      }catch(error){rosterError='The NHL player roster could not be refreshed. The last verified player list remains in use.';updateMonitor.fail('roster',error,{lastSuccessAt:rosterSnapshot?.fetchedAt??null});}
       return rosterMetadata();
     })();
     try{return await rosterRefreshing;}finally{rosterRefreshing=null;}
   }
-  function marketMetadata(){return {version:market.version,asOf:market.asOf,overdue:Date.parse(market.asOf)<previousPriceUpdate(now()),nextUpdate:new Date(nextPriceUpdate(now())).toISOString(),timeZone:'Europe/Helsinki',day:'Monday',time:'12:00',lastSeasonWeight:.75,currentSeasonWeight:.25,weeklyLimit:.05,minimumPrice:MINIMUM_PLAYER_PRICE,minimumGames:5,skaterProjectionGames:82,goalieProjectionGames:55};}
-  function refreshMarket(){if(previewData)return;const next=updateWeeklyPrices(fantasyCatalog,market,fantasySnapshot,now());if(next!==market){if(marketCachePath)saveSnapshot(marketCachePath,next);market=next;}}
+  function marketMetadata(){return {version:market.version,asOf:market.asOf,overdue:Date.parse(market.asOf)<previousPriceUpdate(now()),nextUpdate:new Date(nextPriceUpdate(now())).toISOString(),timeZone:'Europe/Helsinki',day:'Monday',time:'12:00',...PRICE_WEIGHTS,maxHistoryYears:3,historyAvailable:Boolean(priceHistory),historyError:priceHistoryError,weeklyLimit:.05,minimumPrice:MINIMUM_PLAYER_PRICE,minimumGames:5,skaterProjectionGames:82,goalieProjectionGames:55};}
+  function refreshMarket(){if(previewData)return;try{const next=updateWeeklyPrices(fantasyCatalog,market,fantasySnapshot,now(),priceHistory);if(next!==market){if(marketCachePath)saveSnapshot(marketCachePath,next);market=next;updateMonitor.success('market',next.asOf);}}catch(error){updateMonitor.fail('market',error,{lastSuccessAt:market.asOf});}}
   function fantasyBody(session){
     const entry=session?store.getFantasy(session.user.id):null;
     return {user:session?.user??null,csrfToken:session?.csrfToken??null,entry,
@@ -272,9 +302,13 @@ export function createApp(options = {}) {
   async function refreshFantasy(){
     if(closed||!canRefreshFantasy)return fantasyMetadata();
     if(fantasyRefreshing)return fantasyRefreshing;
+    updateMonitor.begin('fantasy');
     fantasyRefreshing=(async()=>{
-      try{const next={...validateFantasySnapshot(await fantasyProvider()),scoringVersion:FANTASY_RATES.version};if(closed)return fantasyMetadata();if(fantasyCachePath)saveSnapshot(fantasyCachePath,next);fantasySnapshot=next;fantasyError=null;refreshMarket();}
-      catch{fantasyError=fantasySnapshot?'Fantasy scores use the last verified update because the latest refresh failed.':'Fantasy statistics could not be verified. Scores will appear after a successful update.';}
+      try{const received=validateFantasySnapshot(await fantasyProvider()),next={...received,scoringVersion:FANTASY_RATES.version};if(closed)return fantasyMetadata();if(fantasyCachePath)saveSnapshot(fantasyCachePath,next);fantasySnapshot=next;fantasyError=null;
+        updateMonitor.success('fantasy',next.fetchedAt);
+        if(next.modelError)updateMonitor.fail('model',received.modelFailureReason??next.modelError);else updateMonitor.success('model',next.fetchedAt);
+        await refreshPriceHistory();refreshMarket();}
+      catch(error){fantasyError=fantasySnapshot?'Fantasy scores use the last verified update because the latest refresh failed.':'Fantasy statistics could not be verified. Scores will appear after a successful update.';updateMonitor.fail('fantasy',error,{lastSuccessAt:fantasySnapshot?.fetchedAt??null});}
       return fantasyMetadata();
     })();
     try{return await fantasyRefreshing;}finally{fantasyRefreshing=null;}
@@ -324,6 +358,7 @@ export function createApp(options = {}) {
   async function refreshStandings() {
     if (closed || !canRefresh) return scoringMetadata();
     if (refreshing) return refreshing;
+    updateMonitor.begin('standings');
     refreshing = (async () => {
       try {
         const next = validateSnapshot(await provider());
@@ -331,10 +366,12 @@ export function createApp(options = {}) {
         if (cachePath) saveSnapshot(cachePath, next);
         snapshot = next;
         refreshError = null;
-      } catch {
+        updateMonitor.success('standings',next.fetchedAt);
+      } catch (error) {
         refreshError = snapshot
           ? 'Live NHL standings could not be refreshed. Scores use the last verified update.'
           : 'Live NHL standings could not be verified. Scores will appear after a verified 2026–27 update.';
+        updateMonitor.fail('standings',error,{lastSuccessAt:snapshot?.fetchedAt??null});
       }
       return scoringMetadata();
     })();
@@ -489,11 +526,17 @@ export function createApp(options = {}) {
   server.on('listening', () => {
     try{refreshMarket();}catch{}
     if(canRefreshContracts)contractUpdater.start();
-    if (canRefresh || canRefreshFantasy || canRefreshRoster) {
+    updateMonitor.start(()=>[
+      {job:'standings',enabled:canRefresh,fetchedAt:snapshot?.fetchedAt,running:Boolean(refreshing)},
+      {job:'fantasy',enabled:canRefreshFantasy,fetchedAt:fantasySnapshot?.fetchedAt,running:Boolean(fantasyRefreshing)},
+      {job:'roster',enabled:canRefreshRoster,fetchedAt:rosterSnapshot?.fetchedAt,running:Boolean(rosterRefreshing)},
+    ]);
+    if (canRefresh || canRefreshFantasy || canRefreshRoster || canRefreshPriceHistory) {
       updateScheduler.start();
       // Restore missed noon updates after downtime, while reusing a current cache.
       if (!snapshot || Date.parse(snapshot.fetchedAt) < previousDailyUpdate(now())) void refreshStandings();
       if(!fantasySnapshot||Date.parse(fantasySnapshot.fetchedAt)<previousDailyUpdate(now()))void refreshFantasy();
+      else void refreshPriceHistory();
       if(!rosterSnapshot||Date.parse(rosterSnapshot.fetchedAt)<previousDailyUpdate(now()))void refreshRoster();
     }
   });
@@ -501,6 +544,7 @@ export function createApp(options = {}) {
   const admin = createLocalAdmin({
     canRefresh,
     refreshStandings,
+    updateMonitor,
     async manageAccount(userId, action, body) {
       if (action === 'rename') return store.adminRenameUser(userId, body.username, body.expectedUsername);
       if (action === 'password') return store.adminResetPassword(userId, body.password, body.expectedUsername);
@@ -523,7 +567,7 @@ export function createApp(options = {}) {
         leaderboard: snapshot ? rankEntries(submitted, snapshot)
           : submitted.map(entry => ({ ...entry, points: null, rank: null })),
         teams: snapshot?.teams ?? null,
-        server: { startedAt, canRefresh,
+        server: { startedAt, canRefresh, updates:updateMonitor.status(),
           updateSchedule: { time: UPDATE_TIME, timeZone: UPDATE_TIME_ZONE, nextUpdate: updateScheduler.getNextUpdate() },
           playerUrl: hosting.publicOrigin ? `${hosting.publicOrigin}/` : address && typeof address === 'object' ? `http://127.0.0.1:${address.port}/` : null },
       };
@@ -541,7 +585,9 @@ export function createApp(options = {}) {
     }
     if (refreshing) await refreshing;
     if (fantasyRefreshing) await fantasyRefreshing;
+    if (priceHistoryRefreshing) await priceHistoryRefreshing;
     if (rosterRefreshing) await rosterRefreshing;
+    await updateMonitor.close();
     store.close();
   }
 

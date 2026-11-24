@@ -1,8 +1,10 @@
 import { createHash } from 'node:crypto';
 import { previousDailyUpdate, nextDailyUpdate } from './schedule.mjs';
+import { priceHistoryCutoff, validatePriceHistory } from './fantasy-price-history.mjs';
 
 const localDay=new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Helsinki',weekday:'short'});
 export const MINIMUM_PLAYER_PRICE=100_000;
+export const PRICE_WEIGHTS=Object.freeze({last100GamesWeight:.5,currentSeasonWeight:.25,last25GamesWeight:.25});
 export function applyMinimumPrice(market){
   if(Object.values(market.prices).every(price=>price>=MINIMUM_PLAYER_PRICE))return market;
   const snapshot={...market,prices:Object.fromEntries(Object.entries(market.prices).map(([id,price])=>[id,Math.max(MINIMUM_PLAYER_PRICE,price)]))};
@@ -38,29 +40,43 @@ export function reconcileMarket(catalog,snapshot){
   return {...next,version:priceVersion(next)};
 }
 export function pricedPlayers(catalog,market){return catalog.players.map(p=>({...p,price:market.prices[p.id],basePrice:p.price}));}
-export function updateWeeklyPrices(catalog,market,stats,now=Date.now()){
+export function updateWeeklyPrices(catalog,market,stats,now=Date.now(),history=null){
   market=applyMinimumPrice(market);
   const due=previousPriceUpdate(now);
   if(Date.parse(market.asOf)>=due)return market;
   // A failed daily stats refresh cannot move market prices on stale statistics.
-  if(!stats||stats.season!==catalog.season||Date.parse(stats.fetchedAt)<due)return market;
+  if(!stats||stats.season!==catalog.season||!Number.isFinite(Date.parse(stats.fetchedAt))||Date.parse(stats.fetchedAt)<due)return market;
   // Never combine a revalued catalog with an old-scale score cache.
   if(catalog.scoringVersion&&stats.scoringVersion!==catalog.scoringVersion)return market;
+  // An old season total cannot stand in for real rolling game windows.
+  try{validatePriceHistory(history,catalog.season);}catch{return market;}
+  const cutoff=priceHistoryCutoff(due);
+  if(Date.parse(history.from)>cutoff)return market;
   const totals=new Map(),played=new Map(),pending=new Set();
   for(const game of stats.games){
     if(Date.parse(game.startTime)>due)continue;
     for(const [key,score] of Object.entries(game.scores)){const id=Number(key);totals.set(id,(totals.get(id)??0)+score);played.set(id,(played.get(id)??0)+1);}
     for(const id of game.pending)pending.add(id);
   }
+  const appearances=new Map();
+  for(const game of [...history.games,...stats.games]){
+    const time=Date.parse(game.startTime);if(time<cutoff||time>due)continue;
+    for(const [key,points] of Object.entries(game.scores)){
+      const id=Number(key);if(!appearances.has(id))appearances.set(id,[]);
+      appearances.get(id).push({id:game.id,time,points,pending:game.pending.includes(id)});
+    }
+  }
   const prices={...market.prices};
   for(const player of catalog.players){
     const games=played.get(player.id)??0;
-    // Regress to last season until there is a meaningful current-season sample.
-    // Goalies keep their verified price while any GSAx adjustment is pending.
-    if(games<5||pending.has(player.id))continue;
+    if(games<5||pending.has(player.id)||!history.playerIds.includes(player.id))continue;
+    const recent=(appearances.get(player.id)??[]).sort((a,b)=>b.time-a.time||b.id-a.id).slice(0,100);
+    if(!recent.length||recent.some(game=>game.pending))continue;
     const fullSeason=player.position==='G'?55:82;
     const projected=(totals.get(player.id)??0)/games*fullSeason;
-    const target=Math.round((.75*player.lastPoints+.25*projected)*catalog.usdPerPoint);
+    const pace=window=>window.reduce((sum,game)=>sum+game.points,0)/window.length*fullSeason;
+    const target=Math.round((PRICE_WEIGHTS.last100GamesWeight*pace(recent)+PRICE_WEIGHTS.currentSeasonWeight*projected+
+      PRICE_WEIGHTS.last25GamesWeight*pace(recent.slice(0,25)))*catalog.usdPerPoint);
     const previous=market.prices[player.id];
     const minimum=Math.max(MINIMUM_PLAYER_PRICE,Math.ceil(previous*.95)),maximum=Math.max(minimum,Math.floor(previous*1.05));
     prices[player.id]=Math.min(maximum,Math.max(minimum,target));

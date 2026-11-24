@@ -14,7 +14,7 @@ export function contractUpdateWindow(now=Date.now()){
   const cutoff=date=>previousDailyUpdate(Date.parse(`${date}T12:00:00Z`));
   return {previous:dates.filter(d=>cutoff(d)<=now).at(-1),next:dates.find(d=>cutoff(d)>now)};
 }
-export function createContractUpdater({catalog,initial,state={},run,save=()=>{},now=Date.now,setTimer,clearTimer}){
+export function createContractUpdater({catalog,initial,state={},run,save=()=>{},report=()=>{},now=Date.now,setTimer,clearTimer}){
   buildPlayerValues(catalog,initial);
   let snapshot=initial,attempted=state.attempted??null,error=state.error??null,running=null,active=false;
   function metadata(){return {dates:['25 September','25 October'],time:'12:00',timeZone:UPDATE_TIME_ZONE,nextDate:contractUpdateWindow(now()).next,lastAttempt:attempted,error};}
@@ -27,12 +27,12 @@ export function createContractUpdater({catalog,initial,state={},run,save=()=>{},
       attempted=due;error=null;
       // Persist the attempted period, even on failure, so restarts never turn
       // this twice-yearly source refresh into repeated upstream requests.
-      try{save({snapshot,attempted,error});}catch{error='The salary refresh state could not be saved. Keeping the verified snapshot.';return;}
+      try{save({snapshot,attempted,error});}catch(cause){error='The salary refresh state could not be saved. Keeping the verified snapshot.';report('failed',cause);return;}
       try{
         const next=await run(snapshot);buildPlayerValues(catalog,next);
         if(next.asOf<due||next.asOf>contractDate(now())||next.players.length<Math.ceil(snapshot.players.length*.8))throw Error('Incomplete contract update');
-        save({snapshot:next,attempted,error:null});snapshot=next;error=null;
-      }catch{error='The scheduled salary update could not be verified. The last verified salary snapshot is still in use.';try{save({snapshot,attempted,error});}catch{}}
+        save({snapshot:next,attempted,error:null});snapshot=next;error=null;report('succeeded');
+      }catch(cause){error='The scheduled salary update could not be verified. The last verified salary snapshot is still in use.';report('failed',cause);try{save({snapshot,attempted,error});}catch{}}
     })();
     try{await running;}finally{running=null;}
   }
@@ -68,7 +68,7 @@ export function parseContractPage(html,season){
   return rows;
 }
 async function pageText(response){
-  if(!response.ok||response.redirected||Number(response.headers.get('content-length'))>4*1024*1024)throw Error('Contract source unavailable');
+  if(!response.ok||response.redirected||Number(response.headers.get('content-length'))>4*1024*1024)throw Error(`Contract source unavailable (HTTP ${response.status}): ${response.url}`);
   const reader=response.body.getReader(),chunks=[];let size=0;
   try{for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>4*1024*1024)throw Error('Oversized contract source');chunks.push(value);}}catch(error){await reader.cancel().catch(()=>{});throw error;}
   return Buffer.concat(chunks).toString('utf8');

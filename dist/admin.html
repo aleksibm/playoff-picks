@@ -91,6 +91,26 @@
               </div>
             </div>
           </section>
+          <section class="panel updates-panel" aria-labelledby="updates-title">
+            <div class="panel-heading"><div><p class="kicker">KEEP WATCH</p><h2 id="updates-title">Update alerts</h2></div><span id="telegram-state" class="count-tag">Not configured</span></div>
+            <p class="muted-text">Get a Telegram message when scores or player data fail to refresh, with the reason and last verified update. A recovery message follows when the feed works again.</p>
+            <div class="updates-grid">
+              <div>
+                <details class="setup-guide" open><summary>Set up Telegram</summary><ol><li>Open <a href="https://t.me/BotFather" target="_blank" rel="noreferrer">@BotFather in Telegram</a>, send <strong>/newbot</strong>, and follow its steps.</li><li>Paste the bot token below. Open your new bot in Telegram and send <strong>/start</strong>.</li><li>Select <strong>Find my chat</strong>, save your settings, then send a test message.</li></ol><p class="field-hint">Use a dedicated bot for this site. If you already know your chat ID, enter it directly.</p></details>
+                <form id="telegram-form" class="management-fields" autocomplete="off">
+                  <label for="telegram-token">Bot token</label><input id="telegram-token" name="telegram-token" type="password" maxlength="125" autocomplete="new-password" spellcheck="false" aria-describedby="telegram-token-hint"><p id="telegram-token-hint" class="field-hint">Saved privately on the server. The saved token is never displayed.</p>
+                  <label for="telegram-chat">Chat ID</label><div class="chat-controls"><input id="telegram-chat" name="telegram-chat" type="text" maxlength="33" inputmode="text" placeholder="For example, 123456789" spellcheck="false"><button id="telegram-find" class="button button-secondary" type="button" disabled>Find my chat</button></div>
+                  <label id="telegram-choices-label" for="telegram-choices" hidden>Select your Telegram chat</label><select id="telegram-choices" hidden></select>
+                  <label class="alert-checkbox" for="telegram-enabled"><input id="telegram-enabled" type="checkbox"> Enable failure and recovery notifications</label>
+                  <div class="account-actions"><button id="telegram-save" class="button button-primary" type="submit" disabled>Save Telegram settings</button><button id="telegram-test" class="button button-secondary" type="button" disabled>Send test message</button></div>
+                  <p id="telegram-status" class="action-status" role="status" aria-live="polite"></p>
+                </form>
+                <p id="telegram-delivery" class="muted-text"></p>
+                <p class="field-hint">Repeat alerts are limited to one per feed every six hours. Failed Telegram deliveries retry automatically. Alerts require this server to be running and online.</p>
+              </div>
+              <div><h3 class="updates-subtitle">Feed status</h3><ul id="update-jobs" class="update-jobs"></ul><h3 class="updates-subtitle">Recent activity</h3><p id="updates-empty" class="muted-text">Refresh activity will appear here.</p><ol id="update-events" class="update-events"></ol></div>
+            </div>
+          </section>
         </div>
       </div>
     </main>

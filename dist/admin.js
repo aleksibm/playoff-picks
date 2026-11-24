@@ -6,6 +6,8 @@ let overview = null;
 let selectedAccountId = null;
 let busy = false;
 let accountAction = null;
+let telegramBusy = false;
+let telegramDirty = false;
 
 function renderAccountActions() {
   const account = overview?.accounts.find(item => item.id === selectedAccountId);
@@ -137,6 +139,87 @@ function renderLeaders() {
   el('leaders-empty').hidden = leaders.length > 0;
 }
 
+const updateNames = { standings:'NHL standings', fantasy:'Fantasy scores', roster:'Player roster', history:'Price history', model:'Goalie data', contracts:'Player salaries', market:'Weekly prices' };
+function renderUpdates() {
+  const updates = overview?.server.updates;
+  if (!updates) return;
+  const telegram = updates.telegram;
+  el('telegram-state').textContent = telegram.enabled ? 'Telegram enabled' : telegram.configured ? 'Alerts disabled' : 'Not configured';
+  if (!telegramDirty) {
+    el('telegram-chat').value = telegram.chatId;
+    el('telegram-enabled').checked = telegram.enabled;
+  }
+  el('telegram-token').placeholder = telegram.tokenSaved ? 'Token saved · leave blank to keep it' : 'Paste the token from BotFather';
+  el('telegram-save').disabled = telegramBusy || !telegram.storageAvailable;
+  el('telegram-find').disabled = telegramBusy || !telegram.storageAvailable;
+  el('telegram-test').disabled = telegramBusy || telegramDirty || !telegram.configured;
+  el('telegram-token').disabled = telegramBusy || !telegram.storageAvailable;
+  el('telegram-chat').disabled = telegramBusy || !telegram.storageAvailable;
+  el('telegram-enabled').disabled = telegramBusy || !telegram.storageAvailable;
+  el('telegram-choices').disabled = telegramBusy;
+  el('telegram-delivery').textContent = !telegram.storageAvailable ? 'Telegram settings are available when this app uses a persistent private data directory.'
+    : telegram.deliveryError ? `Delivery issue: ${telegram.deliveryError}`
+      : telegram.deliveredAt ? `Last message delivered: ${dateTime(telegram.deliveredAt, 'Europe/Helsinki')} · Helsinki` : 'No messages sent yet.';
+  el('update-jobs').replaceChildren(...Object.entries(updates.jobs).map(([job, saved]) => {
+    const item = node('li', saved.incident ? 'update-job warning' : 'update-job');
+    item.append(node('strong', '', updateNames[job] || job), node('span', '', saved.incident ? 'Needs attention' : saved.lastSuccessAt ? 'Verified' : 'Waiting'));
+    item.append(node('p', 'field-hint', saved.incident?.reason || `Last verified: ${dateTime(saved.lastSuccessAt, 'Europe/Helsinki')} · Helsinki`));
+    return item;
+  }));
+  const events = updates.recent.filter(entry => entry.event !== 'update.started').slice(0, 12);
+  el('updates-empty').hidden = events.length > 0;
+  el('update-events').replaceChildren(...events.map(entry => {
+    const item = node('li');
+    const names = { 'update.failed':'Update failed', 'update.succeeded':'Update verified', 'update.recovered':'Feed recovered', 'telegram.delivered':'Telegram delivered', 'telegram.failed':'Telegram delivery failed', 'telegram.test_delivered':'Test message delivered', 'telegram.test_failed':'Test message failed', 'telegram.configured':'Telegram settings saved' };
+    item.append(node('time', '', `${dateTime(entry.time, 'Europe/Helsinki')} · Helsinki`), node('strong', '', `${names[entry.event] || entry.event}${entry.job ? ` · ${updateNames[entry.job] || entry.job}` : ''}`));
+    if (entry.reason) item.append(node('p', '', entry.reason));
+    return item;
+  }));
+}
+
+async function telegramAction(action, body) {
+  if (telegramBusy || !overview?.csrfToken) return;
+  telegramBusy = true;
+  el('telegram-status').classList.remove('error');
+  el('telegram-status').textContent = action === 'chats' ? 'Looking for messages sent to your bot…' : action === 'test' ? 'Sending a test message…' : 'Saving settings…';
+  renderUpdates();
+  try {
+    const response = await fetch(`/api/admin/notifications/${action}`, {
+      method:'POST', headers:{ 'Content-Type':'application/json', 'X-CSRF-Token':overview.csrfToken }, body:JSON.stringify(body), cache:'no-store',
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Telegram setup failed.');
+    if (action === 'chats') {
+      if (!data.chats.length) throw new Error('No chats found. Open your new bot in Telegram, send /start, then try again.');
+      el('telegram-choices').replaceChildren(node('option', '', 'Choose your chat'), ...data.chats.map(chat => {
+        const option = node('option', '', `${chat.name} (${chat.id})`); option.value = chat.id; return option;
+      }));
+      el('telegram-choices').firstElementChild.value = '';
+      el('telegram-choices').hidden = data.chats.length === 1;
+      el('telegram-choices-label').hidden = data.chats.length === 1;
+      if (data.chats.length === 1) { el('telegram-chat').value = data.chats[0].id; telegramDirty = true; }
+      el('telegram-status').textContent = data.chats.length === 1 ? 'Chat found. Enable alerts and save your settings.' : 'Select your chat, then save your settings.';
+    } else {
+      overview = data;
+      if (action === 'settings') { telegramDirty = false; el('telegram-token').value = ''; }
+      renderUpdates();
+      el('telegram-status').textContent = action === 'test' ? 'Test message delivered. Check Telegram.' : overview.server.updates.telegram.enabled ? 'Settings saved. Failure and recovery alerts are enabled.' : 'Settings saved. Notifications are disabled.';
+    }
+  } catch (error) {
+    el('telegram-status').classList.add('error');
+    el('telegram-status').textContent = error instanceof TypeError ? 'Cannot reach the local server. Reload the dashboard and try again.' : error.message;
+  } finally { delete body.botToken; telegramBusy = false; renderUpdates(); }
+}
+
+el('telegram-form').addEventListener('input', () => { telegramDirty = true; renderUpdates(); });
+el('telegram-form').addEventListener('submit', event => {
+  event.preventDefault();
+  void telegramAction('settings', { enabled:el('telegram-enabled').checked, botToken:el('telegram-token').value, chatId:el('telegram-chat').value });
+});
+el('telegram-find').addEventListener('click', () => telegramAction('chats', { botToken:el('telegram-token').value }));
+el('telegram-test').addEventListener('click', () => telegramAction('test', {}));
+el('telegram-choices').addEventListener('change', () => { if (el('telegram-choices').value) el('telegram-chat').value = el('telegram-choices').value; telegramDirty = true; renderUpdates(); });
+
 function render() {
   el('season-label').textContent = `${SEASON} SEASON`;
   el('total-accounts').textContent = overview.summary.accounts;
@@ -153,6 +236,7 @@ function render() {
   renderFeed();
   renderLeaders();
   renderInspector();
+  renderUpdates();
 }
 
 async function load(refresh = false) {

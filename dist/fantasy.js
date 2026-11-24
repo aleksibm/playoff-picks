@@ -73,8 +73,9 @@ function renderRoster(){
     const p=pools[slot.role].shift();
     return `<div class="roster-slot"><div class="slot-role">${slot.role==='F'?'ATTACK':slot.role==='D'?'DEFENSE':'GOALIE'}</div><button type="button" class="slot-main${p?' filled':''}${p?.id===replacing?' replacing':''}" ${p?`data-replace="${p.id}"`:`data-empty-role="${slot.role}"`} aria-label="${p?`${editMode?'Replace':'Selected player:'} ${esc(p.name)}${p.selectable===false?' · Unavailable for new picks':''}`:`${editMode?'Choose':'Empty spot:'} ${slot.label.toLowerCase()}`}"${busy||!editMode?' disabled':''}>${p?`<span aria-hidden="true">${esc(p.team)}</span><strong>${esc(p.name)}</strong><small>${money(p.price)}${p.selectable===false?' · Unavailable':''}</small>`:`<span class="slot-plus" aria-hidden="true">+</span><strong>${slot.label}</strong><small>${editMode?'CHOOSE PLAYER':'EDIT TEAM TO CHOOSE'}</small>`}</button>${p?`${editMode?`<button class="slot-remove" type="button" data-remove="${p.id}" aria-label="Remove ${esc(p.name)}"${busy?' disabled':''}>×</button>`:''}<button type="button" class="slot-game-link" data-games="${p.id}" aria-label="View game-by-game points for ${esc(p.name)}">Game log</button>`:''}</div>`;
   }).join('');
-  $('budget-left').textContent=money(progress.remaining);$('budget-spent').textContent=`${money(progress.cost)} team value`;
-  $('portfolio-value').textContent=`Team + cash: ${money(funds())}${active().length&&!same(draft,active())?' · Cash shown after planned sales and purchases.':''}`;
+  $('budget-left').textContent=money(progress.remaining);$('budget-spent').textContent=money(progress.cost);
+  $('portfolio-value').textContent=money(funds());
+  $('portfolio-note').hidden=!active().length||same(draft,active());
   $('budget-bar').style.width=`${Math.min(100,progress.cost/Math.max(1,funds())*100)}%`;
   $('roster-count').textContent=`${draft.length} of 6 selected`;
   const entered=Boolean(session.entry?.submittedAt),transfers=session.entry?.transfers;
@@ -374,7 +375,7 @@ async function boot(){
 function receiveMarket(data){catalog=data.players;byId=new Map(catalog.map(p=>[p.id,p]));priceMarket=data.market;
   $('fantasy-demo-note').hidden=!data.scoring?.demo;
   const asOf=priceMarket?new Date(priceMarket.asOf).toLocaleDateString('en-GB',{timeZone:'Europe/Helsinki',day:'numeric',month:'short'}):'unavailable';
-  $('market-price-note').textContent=`Prices as of ${asOf}. ${priceMarket?.overdue?'The weekly update is awaiting verified statistics. ':''}Prices update Mondays at noon Helsinki time: 75% last-season value + 25% current-season full-season pace, limited to ±5% each week. Prices stay unchanged until five appearances; goalies awaiting verified GSAx stay at their previous price.`;
+  $('market-price-note').textContent=`Prices as of ${asOf}. ${priceMarket?.overdue?'The weekly update is awaiting verified statistics. ':''}Prices update Mondays at noon Helsinki time: 50% last-100-game pace + 25% this-season pace + 25% last-25-game pace; rolling games are at most three years old, limited to ±5% each week. Prices stay unchanged until five appearances; goalies awaiting verified GSAx stay at their previous price.`;
   const roster=data.roster,note=$('market-roster-note');
   if(note){
     const updated=roster?.fetchedAt?new Date(roster.fetchedAt).toLocaleString('en-GB',{timeZone:'Europe/Helsinki',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):null;

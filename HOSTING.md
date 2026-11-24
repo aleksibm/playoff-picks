@@ -152,6 +152,14 @@ Select an account in the table to open its inspector and management controls. **
 
 The backend gets verified NHL standings daily at **12:00 Europe/Helsinki**, including daylight saving changes. It fetches initial data and catches up after a missed update; no separate cron job is needed. The admin page shows the next update and any stale or unavailable data. Feed outages retain the last verified scores. The game currently uses the **2026–27 regular season**; future seasons require a verified code/configuration update.
 
+### Telegram update alerts
+
+On the hosting laptop, open **http://127.0.0.1:8766/** and scroll to **Update alerts**. Create a dedicated bot in Telegram with [BotFather](https://t.me/BotFather), enter its token in the dashboard, and send `/start` to the new bot. Select **Find my chat** (or enter a known chat ID), enable notifications, and **Save Telegram settings**. Select **Send test message** and verify receipt in Telegram. If multiple chats are found, select the intended destination before saving. The test uses the saved destination; save changes before testing.
+
+Settings take effect immediately without a restart or environment-file editing. Leaving the token field blank keeps the saved token; unchecking notifications disables alerts while keeping settings available for later. Failures and recoveries include the affected feed, time, underlying error, incident ID, and last verified update. The dashboard shows recent failures and Telegram delivery errors. A bot that uses webhooks cannot use chat discovery; use a dedicated bot or enter its chat ID manually. [Telegram Bot API](https://core.telegram.org/bots/api#getupdates)
+
+Credentials and alert state are saved with owner-only permissions under `/var/lib/playoff-picks` and included in private backups. Do not share `telegram-alerts.json`. Inspect logs with `sudo journalctl -u playoff-picks --since today` or the rotated `update-events.jsonl` files in the data directory. Delivery retries and six-hour repeat suppression survive restarts. The watchdog checks stale daily data every minute after a 30-minute grace period; it does not issue extra NHL fetches. Alerts require the app and network to be running; monitoring a powered-off laptop requires a separate external uptime monitor.
+
 The source ZIP excludes accounts and sessions. To preserve existing local accounts, stop the app on this Mac and privately transfer the complete `.local-data` directory, including SQLite WAL/SHM files if present. Stop the Linux service before putting those files in `/var/lib/playoff-picks`. Back up any existing hosting data first. Never combine account databases.
 
 After restoring data:

@@ -31,7 +31,7 @@ test('public player logs include every appearance in date order without fetching
   const {request,calls}=await fixture(t),before=calls();
   const result=await request('/api/fantasy/players/1/games');
   assert.equal(result.status,200);assert.equal(result.data.player.name,'Player 1');assert.equal(result.data.seasonPoints,130);
-  assert.equal(result.data.player.price,1_000_000);assert.equal(result.data.priceChange.amount,0);
+  assert.equal(result.data.player.price,1_000_000);assert.equal(result.data.priceChange,null);
   assert.deepEqual(result.data.games.map(g=>g.gameId),[2026020003,2026020002,2026020001]);
   assert.equal(result.data.games[0].opponent,'DAL');assert.equal(result.data.games[0].homeAway,'away');
   const goalie=await request('/api/fantasy/players/6/games');
